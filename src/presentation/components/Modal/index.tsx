@@ -1,6 +1,7 @@
 import { useEffect, useRef, type MouseEvent, type ReactNode } from 'react'
+import { X } from 'lucide-react'
 import { theme } from '../../../shared/theme'
-import { Dialog, Overlay } from './styles'
+import { CloseButton, Dialog, Overlay } from './styles'
 
 interface IModal {
   onClose: () => void
@@ -15,8 +16,9 @@ interface IModal {
 
 /**
  * Overlay + diálogo genérico y reutilizable: cierra con click afuera,
- * tecla Escape, o llamando a `onClose` desde el contenido. `ProfilesModal`
- * y `ConfirmDeleteProfileDialog` se construyen sobre este componente en
+ * tecla Escape, el botón "X" de la esquina superior derecha, o llamando
+ * a `onClose` desde el contenido. `ProfilesModal` y
+ * `ConfirmDeleteProfileDialog` se construyen sobre este componente en
  * vez de duplicar el patrón overlay/diálogo cada uno por su lado (ver
  * research.md de 002).
  */
@@ -55,6 +57,9 @@ const Modal = ({
         tabIndex={-1}
         onClick={(event: MouseEvent) => event.stopPropagation()}
       >
+        <CloseButton type="button" aria-label="Cerrar" onClick={onClose}>
+          <X size={18} />
+        </CloseButton>
         {children}
       </Dialog>
     </Overlay>

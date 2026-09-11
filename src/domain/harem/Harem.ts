@@ -10,6 +10,27 @@ export interface Harem {
 }
 
 /**
+ * Reordena las series de un harem según `orderedSeriesIds` (User Story 3
+ * de 003). Mismo algoritmo tolerante que `reorderProfiles`/
+ * `reorderCharactersInSeries`: ids desconocidos se ignoran, series
+ * ausentes de la lista quedan al final en su orden relativo anterior.
+ * Nunca modifica `series.characters` de ninguna serie (FR-007) — solo
+ * reordena el array externo.
+ */
+export function reorderSeries(harem: Harem, orderedSeriesIds: string[]): Harem {
+  const knownIds = new Set(harem.series.map((series) => series.id))
+  const requestedKnown = orderedSeriesIds.filter((id) => knownIds.has(id))
+  const requestedSet = new Set(requestedKnown)
+
+  const missing = harem.series.filter((series) => !requestedSet.has(series.id)).map((series) => series.id)
+
+  const finalSequence = [...requestedKnown, ...missing]
+  const seriesById = new Map(harem.series.map((series) => [series.id, series]))
+
+  return { ...harem, series: finalSequence.map((id) => seriesById.get(id)!) }
+}
+
+/**
  * Elimina un personaje de su serie. Si esa serie se queda sin ningún
  * personaje, la serie misma se elimina del harem (FR-022): las series
  * existen solo como agrupación de sus personajes, nunca como entidad
@@ -39,6 +60,42 @@ export function removeCharacterFromSeries(
  */
 export function countCharacters(harem: Harem): number {
   return harem.series.reduce((total, series) => total + series.characters.length, 0)
+}
+
+/**
+ * Reordena los personajes de UNA sola serie (`seriesId`) según
+ * `orderedCharacterIds` (User Story 2 de 003). Mismo algoritmo tolerante
+ * que `reorderProfiles` de `domain/profile/Profile.ts`: ids desconocidos
+ * se ignoran, personajes ausentes de la lista quedan al final en su
+ * orden relativo anterior. Si `seriesId` no corresponde a ninguna serie
+ * del harem, lo devuelve sin cambios. No afecta a ninguna otra serie
+ * (FR-005: un personaje nunca puede terminar en otra serie por este
+ * camino, porque esta función nunca mueve un `Character` entre arrays de
+ * `characters` distintos).
+ */
+export function reorderCharactersInSeries(
+  harem: Harem,
+  seriesId: string,
+  orderedCharacterIds: string[],
+): Harem {
+  const series = harem.series.map((series) => {
+    if (series.id !== seriesId) {
+      return series
+    }
+
+    const knownIds = new Set(series.characters.map((character) => character.id))
+    const requestedKnown = orderedCharacterIds.filter((id) => knownIds.has(id))
+    const requestedSet = new Set(requestedKnown)
+
+    const missing = series.characters.filter((character) => !requestedSet.has(character.id)).map((character) => character.id)
+
+    const finalSequence = [...requestedKnown, ...missing]
+    const charactersById = new Map(series.characters.map((character) => [character.id, character]))
+
+    return { ...series, characters: finalSequence.map((id) => charactersById.get(id)!) }
+  })
+
+  return { ...harem, series }
 }
 
 /**

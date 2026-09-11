@@ -149,6 +149,19 @@ puro `#000000`). El modo se activa automáticamente por
   densidad "Balanceada", cada `CharacterCard` mide 9rem y las tarjetas
   fluyen según el ancho disponible — mobile-first por construcción, sin
   necesidad de breakpoints manuales para el grid en sí.
+- Grupos de serie también en `flex-wrap`, un nivel arriba de la grilla de
+  personajes, pero **sin ancho de columna fijo/uniforme**: cada grupo de
+  serie mide exactamente lo que necesita su propio contenido (una serie
+  de 1 personaje es angosta, una de 7 es ancha) y varios grupos se
+  acomodan lado a lado, apretados, en la misma fila hasta que no entra
+  otro — recién ahí se envuelve a la fila siguiente, sin que cada serie
+  ocupe una fila completa ni todas midan lo mismo. `align-items:
+  flex-start` en el contenedor evita que una serie corta se estire para
+  igualar el alto de una serie vecina con varias filas internas de
+  personajes. En mobile, cuando el contenido de una serie no entra en el
+  ancho disponible, se achica (por el `flex-shrink` por defecto de todo
+  ítem flex) y sus propios personajes pasan a acomodarse en más de una
+  fila interna en vez de desbordar horizontalmente (Principio V).
 - `theme.breakpoints` (`sm` 640px, `md` 768px, `lg` 1024px, `xl` 1280px)
   quedan disponibles para layouts futuros que sí los necesiten.
 - Sin scroll horizontal en ningún viewport (Principio V de la

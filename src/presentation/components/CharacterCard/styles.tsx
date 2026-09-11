@@ -13,10 +13,10 @@ const fadeInUp = keyframes`
 
 export const Card = styled.article`
   display: grid;
-  grid-template-rows: 266px auto;
+  grid-template-rows: 224px auto;
 
-  height: 340px;
-  width: 171px;
+  height: 300px;
+  width: 144px;
   border: 1px solid ${(props) => props.theme.colors.border};
   border-radius: ${(props) => props.theme.radii.md};
   overflow: hidden;
@@ -30,8 +30,8 @@ export const Card = styled.article`
 `;
 
 export const Image = styled.img`
-  width: 100%;
-  height: 100%;
+  width: calc(100% + 4px);
+  height: calc(100% + 4px);
   object-fit: cover;
   background: ${(props) => props.theme.colors.surfaceMuted};
 `;
@@ -55,4 +55,14 @@ export const Meta = styled.span`
   font-size: ${(props) => props.theme.typography.size.xs};
   font-family: ${(props) => props.theme.typography.fontMono};
   color: ${(props) => props.theme.colors.textSecondary};
+`;
+
+export const ImageContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 224px;
+  width: 144px;
+  overflow: hidden;
 `;

@@ -41,7 +41,7 @@ export const darkColors = {
   surface: "#292524",
   surfaceElevated: "#33302E",
   surfaceMuted: "#3F3B38",
-  border: "rgba(255, 255, 255, 0.08)",
+  border: "#585353",
   textPrimary: "#FAFAF9",
   textSecondary: "#A8A29E",
   accent: "#E2691A",
@@ -122,7 +122,7 @@ export const breakpoints = {
 // de una CharacterCard, que se queda local a ese componente).
 export const layout = {
   containerNarrow: "40rem",
-  containerWide: "80rem",
+  containerWide: "118rem",
   dialogWidth: "24rem",
 } as const;
 

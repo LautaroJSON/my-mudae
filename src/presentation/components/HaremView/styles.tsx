@@ -11,7 +11,12 @@ const fadeIn = keyframes`
 
 export const Container = styled.div`
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
+  /* flex-start (no el stretch por defecto): una serie corta al lado de
+     una serie con varias filas internas de personajes no debe estirarse
+     verticalmente para "rellenar" el alto de la fila — cada grupo de
+     serie queda tan alto como su propio contenido. */
+  align-items: flex-start;
   gap: ${(props) => props.theme.spacing.xxl};
   width: 100%;
   max-width: ${(props) => props.theme.layout.containerWide};

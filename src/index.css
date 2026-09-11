@@ -10,6 +10,14 @@ body,
   height: 100%;
 }
 
+/* Bloquea el scroll horizontal a nivel global (Principio V): ningún
+   layout de la app debe poder desbordar a los costados, en ningún
+   viewport. */
+html,
+body {
+  overflow-x: hidden;
+}
+
 body {
   margin: 0;
   color-scheme: light dark;

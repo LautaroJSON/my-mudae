@@ -1,26 +1,35 @@
-import { memo, type CSSProperties } from 'react'
-import type { Character } from '../../../domain/harem/Character'
-import { Body, Card, Image, Meta, Name } from './styles'
+import { memo, type CSSProperties } from "react";
+import type { Character } from "../../../domain/harem/Character";
+import { Body, Card, Image, ImageContainer, Meta, Name } from "./styles";
 
 interface ICharacterCard {
-  character: Character
+  character: Character;
   /** Posición dentro de la serie, usada solo para escalonar la animación de entrada. */
-  staggerIndex?: number
+  staggerIndex?: number;
 }
 
 // Memoizado por props: con harems de 200+ personajes, mover/actualizar un
 // personaje no debe re-renderizar el resto de la lista (Principio III).
 const CharacterCard = ({ character, staggerIndex = 0 }: ICharacterCard) => {
   return (
-    <Card style={{ '--mm-stagger-index': staggerIndex } as CSSProperties}>
-      <Image src={character.imageUrl} alt={character.name} loading="lazy" referrerPolicy="no-referrer" />
+    <Card style={{ "--mm-stagger-index": staggerIndex } as CSSProperties}>
+      <ImageContainer>
+        <Image
+          src={character.imageUrl}
+          alt={character.name}
+          loading="lazy"
+          referrerPolicy="no-referrer"
+        />
+      </ImageContainer>
       <Body>
         <Name>{character.name}</Name>
-        {character.kakera !== undefined && <Meta>{character.kakera} kakera</Meta>}
+        {character.kakera !== undefined && (
+          <Meta>{character.kakera} kakera</Meta>
+        )}
         {character.claimRank && <Meta>{character.claimRank}</Meta>}
       </Body>
     </Card>
-  )
-}
+  );
+};
 
-export default memo(CharacterCard)
+export default memo(CharacterCard);

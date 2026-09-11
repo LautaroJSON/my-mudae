@@ -10,6 +10,8 @@ import { activateProfile as activateProfileUseCase } from '../../application/use
 import { deleteProfile as deleteProfileUseCase } from '../../application/useCases/deleteProfile'
 import { renameProfile as renameProfileUseCase } from '../../application/useCases/renameProfile'
 import { reorderProfiles as reorderProfilesUseCase } from '../../application/useCases/reorderProfiles'
+import { reorderCharactersInSeries as reorderCharactersInSeriesUseCase } from '../../application/useCases/reorderCharactersInSeries'
+import { reorderSeries as reorderSeriesUseCase } from '../../application/useCases/reorderSeries'
 import { getProfileIdFromUrl } from '../urlParams'
 
 export type { CreateProfileFromPasteResult }
@@ -61,6 +63,10 @@ export interface IProfilesContext {
   deleteProfile: (profileId: string) => void
   activateProfile: (profileId: string) => void
   reorderProfiles: (orderedIds: string[]) => void
+  /** Reordena los personajes de una serie del harem del perfil activo (User Story 2 de 003). No hace nada si no hay perfil activo. */
+  reorderCharactersInSeries: (seriesId: string, orderedCharacterIds: string[]) => void
+  /** Reordena las series del harem del perfil activo (User Story 3 de 003). No hace nada si no hay perfil activo. */
+  reorderSeries: (orderedSeriesIds: string[]) => void
 }
 
 const ProfilesContext = createContext<IProfilesContext | undefined>(undefined)
@@ -75,6 +81,7 @@ const ProfilesProvider = ({ children, repository }: IProfilesProvider) => {
   const activeRepository = useMemo(() => repository ?? new LocalStorageProfileRepository(), [repository])
   const [state, setState] = useState(() => resolveInitialState(activeRepository))
   const { profiles, urlProfileStatus } = state
+  const activeProfile = profiles.find((profile) => profile.isActive)
 
   const syncFromRepository = () => {
     setState((previous) => ({ ...previous, profiles: sortByOrder(activeRepository.getAll()) }))
@@ -108,15 +115,33 @@ const ProfilesProvider = ({ children, repository }: IProfilesProvider) => {
     syncFromRepository()
   }
 
+  const reorderCharactersInSeries: IProfilesContext['reorderCharactersInSeries'] = (seriesId, orderedCharacterIds) => {
+    if (!activeProfile) {
+      return
+    }
+    reorderCharactersInSeriesUseCase(activeRepository, activeProfile.id, seriesId, orderedCharacterIds)
+    syncFromRepository()
+  }
+
+  const reorderSeries: IProfilesContext['reorderSeries'] = (orderedSeriesIds) => {
+    if (!activeProfile) {
+      return
+    }
+    reorderSeriesUseCase(activeRepository, activeProfile.id, orderedSeriesIds)
+    syncFromRepository()
+  }
+
   const value: IProfilesContext = {
     profiles,
-    activeProfile: profiles.find((profile) => profile.isActive),
+    activeProfile,
     urlProfileStatus,
     createProfileFromPaste,
     renameProfile,
     deleteProfile,
     activateProfile,
     reorderProfiles,
+    reorderCharactersInSeries,
+    reorderSeries,
   }
 
   return <ProfilesContext.Provider value={value}>{children}</ProfilesContext.Provider>
