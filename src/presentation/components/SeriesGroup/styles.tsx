@@ -70,7 +70,11 @@ export const DragHandle = styled.button`
 
 export const CharacterList = styled.div`
   display: flex;
-  flex-wrap: wrap;
+  /* nowrap + overflow-x: los personajes de una serie van siempre en una
+     sola fila; al llegar al ancho máximo disponible, la lista scrollea
+     horizontalmente en vez de saltar a una segunda línea. */
+  flex-wrap: nowrap;
+  overflow-x: auto;
   gap: ${(props) => props.theme.spacing.md};
   /* Crítico: sin esto, CharacterList hereda el align-items: stretch por
      defecto de Section (flex-direction: column) y se estira para
@@ -81,6 +85,10 @@ export const CharacterList = styled.div`
      en vez del ancho real de las tarjetas, dejando el "cap" del
      encabezado sin efecto. flex-start hace que CharacterList siempre
      reporte su propio ancho de contenido, sin importar qué tan ancho
-     esté Section en ese momento. */
+     esté Section en ese momento. También es lo que, con overflow-x,
+     acota su ancho visible al espacio disponible en vez de crecer sin
+     límite -- disparando el scroll horizontal en ese punto.
+  */
   align-self: flex-start;
+  max-width: 100%;
 `;
