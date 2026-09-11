@@ -56,4 +56,16 @@ describe('Header', () => {
 
     expect(screen.getByRole('dialog')).toBeInTheDocument()
   })
+
+  it('muestra el icono "Compartir harem" junto al control de perfil', () => {
+    renderHeader(new InMemoryProfileRepository([buildProfile()]))
+
+    expect(screen.getByRole('button', { name: /compartir harem/i })).toBeInTheDocument()
+  })
+
+  it('sin perfil activo, el icono "Compartir harem" aparece deshabilitado', () => {
+    renderHeader()
+
+    expect(screen.getByRole('button', { name: /compartir harem/i })).toBeDisabled()
+  })
 })

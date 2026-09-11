@@ -13,6 +13,12 @@ export const Bar = styled.header`
   border-bottom: 1px solid ${(props) => props.theme.colors.border};
 `
 
+export const RightGroup = styled.div`
+  display: flex;
+  align-items: center;
+  gap: ${(props) => props.theme.spacing.sm};
+`
+
 export const Title = styled.span`
   font-family: ${(props) => props.theme.typography.fontDisplay};
   font-size: ${(props) => props.theme.typography.size.lg};
