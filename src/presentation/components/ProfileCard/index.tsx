@@ -1,23 +1,34 @@
-import { useState, type KeyboardEvent } from 'react'
-import { ExternalLink, GripVertical, Pencil, Trash2 } from 'lucide-react'
-import type { DraggableAttributes, DraggableSyntheticListeners } from '@dnd-kit/core'
-import type { Profile } from '../../../domain/profile/Profile'
-import { countCharacters, sumKakera } from '../../../domain/harem/Harem'
-import ConfirmDeleteProfileDialog from '../ConfirmDeleteProfileDialog'
-import { ActivateButton, Card, DragHandle, IconButton, NameColumn, NameInput, Stats } from './styles'
+import { useState, type KeyboardEvent } from "react";
+import { ExternalLink, GripVertical, Pencil, Trash2 } from "lucide-react";
+import type {
+  DraggableAttributes,
+  DraggableSyntheticListeners,
+} from "@dnd-kit/core";
+import type { Profile } from "../../../domain/profile/Profile";
+import { countCharacters, sumKakera } from "../../../domain/harem/Harem";
+import ConfirmDeleteProfileDialog from "../ConfirmDeleteProfileDialog";
+import {
+  ActivateButton,
+  Card,
+  DragHandle,
+  IconButton,
+  NameColumn,
+  NameInput,
+  Stats,
+} from "./styles";
 
 interface IProfileCard {
-  profile: Profile
-  onActivate: (profileId: string) => void
-  onDelete: (profileId: string) => void
-  onRename: (profileId: string, alias: string) => void
+  profile: Profile;
+  onActivate: (profileId: string) => void;
+  onDelete: (profileId: string) => void;
+  onRename: (profileId: string, alias: string) => void;
   /** Abre ese perfil en una pestaña nueva vía `?id=` (User Story 5 de 002). */
-  onOpenInNewTab: (profileId: string) => void
+  onOpenInNewTab: (profileId: string) => void;
   /** Props de `useSortable` de @dnd-kit para la manija de arrastre (User Story 2). */
   dragHandleProps?: {
-    attributes: DraggableAttributes
-    listeners: DraggableSyntheticListeners
-  }
+    attributes: DraggableAttributes;
+    listeners: DraggableSyntheticListeners;
+  };
 }
 
 /**
@@ -27,35 +38,42 @@ interface IProfileCard {
  * completo con el perfil). El perfil activo se distingue con un borde en
  * el color de acento (FR-007 de 002), sin ninguna etiqueta de texto.
  */
-const ProfileCard = ({ profile, onActivate, onDelete, onRename, onOpenInNewTab, dragHandleProps }: IProfileCard) => {
-  const [isEditingName, setIsEditingName] = useState(false)
-  const [draftName, setDraftName] = useState(profile.alias)
-  const [isConfirmingDelete, setIsConfirmingDelete] = useState(false)
+const ProfileCard = ({
+  profile,
+  onActivate,
+  onDelete,
+  onRename,
+  onOpenInNewTab,
+  dragHandleProps,
+}: IProfileCard) => {
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [draftName, setDraftName] = useState(profile.alias);
+  const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
 
   const startEditing = () => {
-    setDraftName(profile.alias)
-    setIsEditingName(true)
-  }
+    setDraftName(profile.alias);
+    setIsEditingName(true);
+  };
 
   const commitRename = () => {
-    const trimmed = draftName.trim()
+    const trimmed = draftName.trim();
     if (trimmed.length > 0) {
-      onRename(profile.id, trimmed)
+      onRename(profile.id, trimmed);
     }
-    setIsEditingName(false)
-  }
+    setIsEditingName(false);
+  };
 
   const handleNameKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === 'Enter') {
-      commitRename()
+    if (event.key === "Enter") {
+      commitRename();
     }
-    if (event.key === 'Escape') {
-      setIsEditingName(false)
+    if (event.key === "Escape") {
+      setIsEditingName(false);
     }
-  }
+  };
 
-  const characterCount = countCharacters(profile.harem)
-  const totalKakera = sumKakera(profile.harem)
+  const characterCount = countCharacters(profile.harem);
+  const totalKakera = sumKakera(profile.harem);
 
   return (
     <Card $isActive={profile.isActive}>
@@ -69,7 +87,7 @@ const ProfileCard = ({ profile, onActivate, onDelete, onRename, onOpenInNewTab, 
           <GripVertical size={16} />
         </DragHandle>
       )}
-      <NameColumn>
+      <NameColumn onClick={() => onActivate(profile.id)}>
         {isEditingName ? (
           <NameInput
             aria-label="Nombre del perfil"
@@ -83,7 +101,6 @@ const ProfileCard = ({ profile, onActivate, onDelete, onRename, onOpenInNewTab, 
           <ActivateButton
             type="button"
             $isActive={profile.isActive}
-            onClick={() => onActivate(profile.id)}
             disabled={profile.isActive}
           >
             {profile.alias}
@@ -91,7 +108,8 @@ const ProfileCard = ({ profile, onActivate, onDelete, onRename, onOpenInNewTab, 
         )}
         {!isEditingName && (
           <Stats>
-            {characterCount} {characterCount === 1 ? 'personaje' : 'personajes'} · {totalKakera} kakera
+            {characterCount} {characterCount === 1 ? "personaje" : "personajes"}{" "}
+            · {totalKakera} kakera
           </Stats>
         )}
       </NameColumn>
@@ -105,7 +123,11 @@ const ProfileCard = ({ profile, onActivate, onDelete, onRename, onOpenInNewTab, 
         </IconButton>
       )}
       {!isEditingName && (
-        <IconButton type="button" aria-label={`Editar nombre de ${profile.alias}`} onClick={startEditing}>
+        <IconButton
+          type="button"
+          aria-label={`Editar nombre de ${profile.alias}`}
+          onClick={startEditing}
+        >
           <Pencil size={16} />
         </IconButton>
       )}
@@ -120,14 +142,14 @@ const ProfileCard = ({ profile, onActivate, onDelete, onRename, onOpenInNewTab, 
         <ConfirmDeleteProfileDialog
           profileName={profile.alias}
           onConfirm={() => {
-            setIsConfirmingDelete(false)
-            onDelete(profile.id)
+            setIsConfirmingDelete(false);
+            onDelete(profile.id);
           }}
           onCancel={() => setIsConfirmingDelete(false)}
         />
       )}
     </Card>
-  )
-}
+  );
+};
 
-export default ProfileCard
+export default ProfileCard;

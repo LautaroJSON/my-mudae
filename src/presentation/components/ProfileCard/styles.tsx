@@ -1,4 +1,4 @@
-import styled from 'styled-components'
+import styled from "styled-components";
 
 // Antes era un <li> directo; ahora vive dentro del <li> "sortable" que
 // arma ProfileList (dnd-kit necesita ese <li> para el ref/transform del
@@ -12,11 +12,14 @@ export const Card = styled.div<{ $isActive: boolean }>`
   align-items: center;
   gap: ${(props) => props.theme.spacing.sm};
   padding: ${(props) => props.theme.spacing.md};
-  border: 1.5px solid ${(props) => (props.$isActive ? props.theme.colors.accent : props.theme.colors.border)};
+  border: 1.5px solid
+    ${(props) =>
+      props.$isActive ? props.theme.colors.accent : props.theme.colors.border};
   border-radius: ${(props) => props.theme.radii.md};
   background: ${(props) => props.theme.colors.surface};
-  transition: border-color ${(props) => props.theme.motion.duration.fast} ${(props) => props.theme.motion.easing};
-`
+  transition: border-color ${(props) => props.theme.motion.duration.fast}
+    ${(props) => props.theme.motion.easing};
+`;
 
 export const DragHandle = styled.button`
   display: inline-flex;
@@ -37,7 +40,7 @@ export const DragHandle = styled.button`
   &:active {
     cursor: grabbing;
   }
-`
+`;
 
 export const NameColumn = styled.div`
   flex: 1;
@@ -45,7 +48,8 @@ export const NameColumn = styled.div`
   display: flex;
   flex-direction: column;
   gap: ${(props) => props.theme.spacing.xxs};
-`
+  cursor: pointer;
+`;
 
 export const ActivateButton = styled.button<{ $isActive: boolean }>`
   display: block;
@@ -60,9 +64,11 @@ export const ActivateButton = styled.button<{ $isActive: boolean }>`
   padding: 0;
   font-size: ${(props) => props.theme.typography.size.md};
   color: ${(props) => props.theme.colors.textPrimary};
-  font-weight: ${(props) => (props.$isActive ? props.theme.typography.weight.bold : props.theme.typography.weight.regular)};
-  cursor: ${(props) => (props.$isActive ? 'default' : 'pointer')};
-`
+  font-weight: ${(props) =>
+    props.$isActive
+      ? props.theme.typography.weight.bold
+      : props.theme.typography.weight.regular};
+`;
 
 export const Stats = styled.span`
   display: block;
@@ -72,18 +78,19 @@ export const Stats = styled.span`
   font-family: ${(props) => props.theme.typography.fontMono};
   font-size: ${(props) => props.theme.typography.size.xs};
   color: ${(props) => props.theme.colors.textSecondary};
-`
+`;
 
 export const NameInput = styled.input`
   width: 100%;
   box-sizing: border-box;
   font-size: ${(props) => props.theme.typography.size.md};
-  padding: ${(props) => props.theme.spacing.xxs} ${(props) => props.theme.spacing.sm};
+  padding: ${(props) => props.theme.spacing.xxs}
+    ${(props) => props.theme.spacing.sm};
   border: 1px solid ${(props) => props.theme.colors.border};
   border-radius: ${(props) => props.theme.radii.sm};
   background: ${(props) => props.theme.colors.surface};
   color: ${(props) => props.theme.colors.textPrimary};
-`
+`;
 
 export const IconButton = styled.button`
   display: inline-flex;
@@ -96,9 +103,10 @@ export const IconButton = styled.button`
   color: ${(props) => props.theme.colors.textSecondary};
   cursor: pointer;
   padding: ${(props) => props.theme.spacing.xxs};
-  transition: background-color ${(props) => props.theme.motion.duration.fast} ${(props) => props.theme.motion.easing};
+  transition: background-color ${(props) => props.theme.motion.duration.fast}
+    ${(props) => props.theme.motion.easing};
 
   &:hover {
     background: ${(props) => props.theme.colors.surfaceMuted};
   }
-`
+`;
