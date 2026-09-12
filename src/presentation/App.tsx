@@ -2,6 +2,7 @@ import { ThemeProvider } from 'styled-components'
 import ProfilesProvider, { useProfiles } from './context/ProfilesContext'
 import Header from './components/Header'
 import HaremView from './components/HaremView'
+import SettingsFab from './components/SettingsFab'
 import GlobalStyle from './GlobalStyle'
 import { EmptyState } from './AppStyles'
 import { theme } from '../shared/theme'
@@ -20,6 +21,7 @@ const AppContent = () => {
   return (
     <>
       <Header />
+      <SettingsFab />
       {urlProfileStatus === 'not-found' ? (
         <EmptyState role="alert">
           El perfil que buscás no existe — puede que el enlace esté desactualizado. Abrí el menú de arriba a la

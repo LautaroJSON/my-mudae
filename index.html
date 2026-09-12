@@ -19,6 +19,25 @@
     />
   </head>
   <body>
+    <!--
+      Anti-parpadeo de tema (007): fija data-theme antes del primer
+      render de React si el usuario ya había elegido "claro"/"legacy"
+      (localStorage, mismo mecanismo que useThemePreference.ts). El tema
+      "default" no necesita esto -- ya decide su apariencia vía
+      prefers-color-scheme, sin parpadeo posible. Envuelto en try/catch:
+      localStorage puede lanzar en contextos restringidos (navegación
+      privada estricta).
+    -->
+    <script>
+      (function () {
+        try {
+          var theme = localStorage.getItem('mymudae:theme')
+          if (theme === 'claro' || theme === 'legacy') {
+            document.documentElement.setAttribute('data-theme', theme)
+          }
+        } catch (e) {}
+      })()
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

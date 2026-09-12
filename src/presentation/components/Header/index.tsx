@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { useProfiles } from '../../context/ProfilesContext'
 import ProfilesModal from '../ProfilesModal'
 import HeaderActions from '../HeaderActions'
-import { Bar, ProfileButton, RightGroup, Title } from './styles'
+import { APP_VERSION } from '../../../shared/appVersion'
+import { Bar, ProfileButton, RightGroup, Title, TitleGroup, VersionTag } from './styles'
 
 /**
  * Header fijo, siempre visible (FR-001). Muestra el alias del perfil
@@ -15,7 +16,10 @@ const Header = () => {
 
   return (
     <Bar>
-      <Title>MyMudae</Title>
+      <TitleGroup>
+        <Title>MyMudae</Title>
+        <VersionTag>v{APP_VERSION}</VersionTag>
+      </TitleGroup>
       <RightGroup>
         <HeaderActions />
         <ProfileButton type="button" aria-label="Abrir perfiles" onClick={() => setIsModalOpen(true)}>

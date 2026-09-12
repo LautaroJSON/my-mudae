@@ -6,13 +6,18 @@
  * o spacing se hardcodea fuera de este archivo (Restricciones Técnicas de
  * la constitución).
  *
- * Los colores viven detrás de CSS custom properties (`--mm-color-*`,
- * `--mm-shadow-*`) definidas en `GlobalStyle.tsx` a partir de
- * `lightColors`/`darkColors` de acá mismo, con la variante oscura
- * activada automáticamente vía `@media (prefers-color-scheme: dark)` — no
- * hay toggle manual ni estado de React para el tema. El resto de los
- * tokens (tipografía, spacing, radios, motion, breakpoints, z-index) no
- * cambia entre claro/oscuro, así que viven como valores planos.
+ * Los colores (`--mm-color-*`, `--mm-shadow-*`) y la tipografía de cuerpo/
+ * display (`--mm-font-body`, `--mm-font-display`) viven detrás de CSS
+ * custom properties definidas en `GlobalStyle.tsx` a partir de
+ * `lightColors`/`darkColors`/`legacyColors`/`legacyFonts` de acá mismo.
+ * El usuario elige el tema activo (`useThemePreference`, 007) fijando un
+ * atributo `data-theme` en `<html>`; "default" sigue adaptándose solo
+ * vía `@media (prefers-color-scheme: dark)` (comportamiento histórico de
+ * la app), mientras que "claro"/"legacy" quedan fijos sin importar el
+ * sistema (ver contracts/theme-css-mechanism.md de 007). El resto de los
+ * tokens (tamaños/pesos tipográficos, spacing, radios, motion,
+ * breakpoints, z-index) no cambia entre temas, así que viven como
+ * valores planos.
  */
 
 // Paleta "Stone + Naranja quemado" — claro. Base neutra cálida (stone),
@@ -50,6 +55,36 @@ export const darkColors = {
   overlay: "rgba(0, 0, 0, 0.6)",
   shadowSm: "0 1px 2px rgba(0, 0, 0, 0.4)",
   shadowLg: "0 20px 48px rgba(0, 0, 0, 0.55)",
+} as const;
+
+// Tema "Legacy" (007) — paleta oscura inspirada en "Tokyo Night" (tema de
+// VS Code de Enkia): fondo azul-negro, acento celeste característico de
+// ese tema, texto lavanda claro. A diferencia de darkColors, esta paleta
+// NO se activa por `prefers-color-scheme`: solo se aplica cuando el
+// usuario elige "Legacy" explícitamente (data-theme="legacy" fijo, sin
+// importar el sistema — ver contracts/theme-css-mechanism.md).
+export const legacyColors = {
+  background: "#1A1B26",
+  surface: "#1F2335",
+  surfaceElevated: "#292E42",
+  surfaceMuted: "#24283B",
+  border: "#3B4261",
+  textPrimary: "#C0CAF5",
+  textSecondary: "#9AA5CE",
+  accent: "#7AA2F7",
+  accentHover: "#89B4FA",
+  danger: "#F7768E",
+  overlay: "rgba(10, 10, 20, 0.6)",
+  shadowSm: "0 1px 2px rgba(0, 0, 0, 0.5)",
+  shadowLg: "0 20px 48px rgba(0, 0, 0, 0.6)",
+} as const;
+
+// Tipografía del tema "Legacy" (007): Segoe UI en toda la app, fija sin
+// importar el sistema. `fontMono` no varía por tema (fuera de alcance
+// del pedido original, ver research.md de 007).
+export const legacyFonts = {
+  fontBody: "'Segoe UI', system-ui, Roboto, Arial, sans-serif",
+  fontDisplay: "'Segoe UI', system-ui, Roboto, Arial, sans-serif",
 } as const;
 
 export const typography = {
@@ -162,9 +197,22 @@ const colors = {
   onAccent: "#1C1917",
 } as const;
 
+// Mismo patrón que `colors`: `fontBody`/`fontDisplay` son referencias a
+// CSS custom properties (definidas en GlobalStyle.tsx a partir del
+// `typography` de acá arriba, con override fijo bajo
+// `data-theme="legacy"`), así que ningún componente que lea
+// `props.theme.typography.fontBody`/`fontDisplay` necesita cambiar para
+// reflejar el tema activo. `fontMono`/`size`/`weight`/`lineHeight` no
+// varían por tema, se reutilizan tal cual de `typography`.
+const themedTypography = {
+  ...typography,
+  fontBody: "var(--mm-font-body)",
+  fontDisplay: "var(--mm-font-display)",
+} as const;
+
 export const theme = {
   colors,
-  typography,
+  typography: themedTypography,
   spacing,
   radii,
   motion,
