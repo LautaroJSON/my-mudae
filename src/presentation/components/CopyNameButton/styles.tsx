@@ -1,6 +1,6 @@
-import styled from 'styled-components'
+import styled from "styled-components";
 
-type Feedback = 'idle' | 'success'
+type Feedback = "idle" | "success";
 
 // Oculto por defecto y revelado por hover/foco solo en dispositivos con
 // puntero fino (mouse/trackpad); fuera de esa media query (táctil,
@@ -22,20 +22,37 @@ export const RoundIconButton = styled.button<{ $feedback: Feedback }>`
   height: 1.75rem;
   border-radius: ${(props) => props.theme.radii.pill};
   border: none;
-  background: ${(props) => (props.$feedback === 'success' ? props.theme.colors.accent : props.theme.colors.surface)};
-  color: ${(props) => (props.$feedback === 'success' ? props.theme.colors.onAccent : props.theme.colors.textPrimary)};
+  background: ${(props) =>
+    props.$feedback === "success"
+      ? props.theme.colors.accent
+      : props.theme.colors.surface};
+  color: ${(props) =>
+    props.$feedback === "success"
+      ? props.theme.colors.onAccent
+      : props.theme.colors.textPrimary};
   box-shadow: ${(props) => props.theme.colors.shadowSm};
   cursor: pointer;
-  transition:
-    background-color ${(props) => props.theme.motion.duration.fast} ${(props) => props.theme.motion.easing},
-    color ${(props) => props.theme.motion.duration.fast} ${(props) => props.theme.motion.easing};
+  transition: background-color ${(props) => props.theme.motion.duration.base}
+    ${(props) => props.theme.motion.easing};
 
   &:hover {
-    background: ${(props) => (props.$feedback === 'success' ? props.theme.colors.accent : props.theme.colors.surfaceMuted)};
+    background: ${(props) =>
+      props.$feedback === "success"
+        ? props.theme.colors.accent
+        : props.theme.colors.surfaceMuted};
   }
 
   @media (hover: hover) and (pointer: fine) {
-    opacity: ${(props) => (props.$feedback === 'success' ? 1 : 0)};
-    pointer-events: ${(props) => (props.$feedback === 'success' ? 'auto' : 'none')};
+    opacity: ${(props) => (props.$feedback === "success" ? 1 : 0)};
+    transform: ${(props) =>
+      props.$feedback === "success" ? "scale(1)" : "scale(0.85)"};
+    pointer-events: ${(props) =>
+      props.$feedback === "success" ? "auto" : "none"};
+    transition: opacity ${(props) => props.theme.motion.duration.base}
+        ${(props) => props.theme.motion.easing},
+      transform ${(props) => props.theme.motion.duration.base}
+        ${(props) => props.theme.motion.easing},
+      background-color ${(props) => props.theme.motion.duration.base}
+        ${(props) => props.theme.motion.easing};
   }
-`
+`;

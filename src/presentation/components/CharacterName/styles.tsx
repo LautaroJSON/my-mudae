@@ -2,6 +2,7 @@ import styled, { keyframes } from "styled-components";
 
 export const Viewport = styled.div`
   width: 100%;
+  min-width: 0;
   overflow: hidden;
 `;
 

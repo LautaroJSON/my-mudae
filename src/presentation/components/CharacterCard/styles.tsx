@@ -16,7 +16,7 @@ export const Card = styled.article`
   display: grid;
   grid-template-rows: 224px auto;
 
-  height: 300px;
+  /* height: 300px; */
   width: 144px;
   border: 1px solid ${(props) => props.theme.colors.border};
   border-radius: ${(props) => props.theme.radii.md};
@@ -28,27 +28,26 @@ export const Card = styled.article`
     var(--mm-stagger-index, 0) *
       ${(props) => props.theme.motion.staggerStepMs}ms
   );
-  transition:
-    border-color ${(props) => props.theme.motion.duration.fast}
-      ${(props) => props.theme.motion.easing},
-    box-shadow ${(props) => props.theme.motion.duration.fast}
-      ${(props) => props.theme.motion.easing};
+  transition: all 0.8s ${(props) => props.theme.motion.easing};
 
   &:hover {
     border-color: ${(props) => props.theme.colors.accent};
-    box-shadow: ${(props) => props.theme.colors.shadowSm};
+    box-shadow: ${(props) => props.theme.colors.shadowLg};
+    transform: translateY(1px) scale(1.1em);
   }
 
   @media (hover: hover) and (pointer: fine) {
     &:hover [data-copy-name-button],
     &:focus-within [data-copy-name-button] {
       opacity: 1;
+      transform: scale(1);
       pointer-events: auto;
     }
 
     &:hover [data-rank-badge],
     &:focus-within [data-rank-badge] {
       opacity: 1;
+      transform: scale(1);
     }
   }
 
@@ -69,20 +68,16 @@ export const Image = styled.img`
   width: calc(100% + 4px);
   height: calc(100% + 4px);
   object-fit: cover;
-  background: ${(props) => props.theme.colors.surfaceMuted};
 `;
 
 export const Body = styled.div`
   display: flex;
   flex-direction: column;
-  height: 76px;
-  padding: ${(props) => props.theme.spacing.sm};
+  min-width: 0;
+  height: fit-content;
+  padding: ${(props) => props.theme.spacing.md};
   gap: ${(props) => props.theme.spacing.xxs};
 
-  // Mobile: alto intrínseco (no 76px fijo) con padding más ajustado —
-  // el texto no se achica más (el nombre ya está en el piso de la
-  // escala tipográfica), pero el contenedor deja de reservar espacio
-  // fijo que ya no hace falta con la card compacta.
   @media (max-width: ${(props) => props.theme.breakpoints.sm}) {
     height: auto;
     padding: ${(props) => props.theme.spacing.xs};
@@ -97,17 +92,21 @@ export const RankBadge = styled.span`
   display: inline-flex;
   align-items: center;
   padding: 0.125rem ${(props) => props.theme.spacing.xs};
-  border-radius: ${(props) => props.theme.radii.pill};
-  background: ${(props) => props.theme.colors.surface};
+  border-radius: ${(props) => props.theme.radii.sm};
+  background: ${(props) => props.theme.colors.overlay};
   box-shadow: ${(props) => props.theme.colors.shadowSm};
-  color: ${(props) => props.theme.colors.textSecondary};
+  color: ${(props) => props.theme.colors.textPrimary};
   font-size: ${(props) => props.theme.typography.size.xs};
   font-family: ${(props) => props.theme.typography.fontMono};
   pointer-events: none;
 
   @media (hover: hover) and (pointer: fine) {
     opacity: 0;
-    transition: opacity ${(props) => props.theme.motion.duration.fast} ${(props) => props.theme.motion.easing};
+    transform: scale(0.85);
+    transition: opacity ${(props) => props.theme.motion.duration.base}
+        ${(props) => props.theme.motion.easing},
+      transform ${(props) => props.theme.motion.duration.base}
+        ${(props) => props.theme.motion.easing};
   }
 `;
 
