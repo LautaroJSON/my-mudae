@@ -81,6 +81,7 @@ export function parseHaremMessage(rawText: string): ParsedHaremMessage {
   const lines = rawText.split(/\r\n|\r|\n/)
 
   let profileName = ''
+  let isFirstContentLine = true
   const series: ParsedSeries[] = []
   let currentSeries: ParsedSeries | undefined
   let foundAnySeries = false
@@ -92,10 +93,26 @@ export function parseHaremMessage(rawText: string): ParsedHaremMessage {
       continue // línea en blanco o de espacio invisible: ruido (FR-005)
     }
 
-    const profileMatch = PROFILE_HEADER.exec(line)
-    if (profileMatch && !profileName) {
-      profileName = profileMatch[1].trim()
-      continue
+    if (isFirstContentLine) {
+      isFirstContentLine = false
+      const profileMatch = PROFILE_HEADER.exec(line)
+      if (profileMatch) {
+        profileName = profileMatch[1].trim()
+        continue
+      }
+
+      // Mudae permite un nombre de harem personalizado (con emojis, sin
+      // el formato habitual "<usuario>'s harem") — mientras la primera
+      // línea con contenido no sea en sí misma un encabezado de serie o
+      // una línea de personaje (paste malformado sin ningún encabezado
+      // de perfil), se toma tal cual como profileName (edge case
+      // reportado: "🌸 Patio de Pastra 🌸").
+      const looksStructural =
+        SERIES_HEADER.test(line) || CHARACTER_WITH_KAKERA.test(line) || CHARACTER_WITHOUT_KAKERA.test(line)
+      if (!looksStructural) {
+        profileName = line
+        continue
+      }
     }
 
     const seriesMatch = SERIES_HEADER.exec(line)

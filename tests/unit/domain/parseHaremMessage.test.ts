@@ -289,4 +289,52 @@ Amagami - 1/11
       imageUrl: 'https://mudae.net/x.png',
     })
   })
+
+  it('reconoce un nombre de harem personalizado (con emojis, sin el formato "<usuario>\'s harem") como profileName', () => {
+    // Ejemplo real reportado: Mudae permite ponerle un nombre custom al
+    // harem, reemplazando por completo el encabezado habitual.
+    const message = `🌸 Patio de Pastra 🌸
+​
+Total value: 60.358:kakera:
+
+22/7 - 1/20
+#42.901 - Yuki Tojo 44 ka - https://mudae.net/uploads/3404950/B8UDAvm~KlSor0P.png
+
+Adachi to Shimamura - 3/10
+#9.666 - Sakura Adachi 78 ka - https://mudae.net/uploads/2340865/u90_f3L~ix22VMh.png
+#10.885 - Hougetsu Shimamura 71 ka - https://mudae.net/uploads/3520096/072ENG6~ZLoMqJy.png
+#68.883 - Akira Hino 39 ka - https://mudae.net/uploads/6691692/uGmK4fG~EmHuZHw.png`
+
+    const result = parseHaremMessage(message)
+
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+
+    expect(result.profileName).toBe('🌸 Patio de Pastra 🌸')
+    expect(result.series.map((series) => series.name)).toEqual(['22/7', 'Adachi to Shimamura'])
+
+    const nijuuni = result.series.find((series) => series.name === '22/7')
+    expect(nijuuni?.characters[0]).toEqual({
+      claimRank: '#42.901',
+      name: 'Yuki Tojo',
+      kakera: 44,
+      imageUrl: 'https://mudae.net/uploads/3404950/B8UDAvm~KlSor0P.png',
+    })
+
+    const adachi = result.series.find((series) => series.name === 'Adachi to Shimamura')
+    expect(adachi?.characters.map((character) => character.claimRank)).toEqual(['#9.666', '#10.885', '#68.883'])
+  })
+
+  it('no confunde un paste malformado (sin ningún encabezado de perfil) tomando el primer encabezado de serie como nombre', () => {
+    const message = `Amagami - 1/11
+#182 - Noelle Silva - https://mudae.net/uploads/1/a.png`
+
+    const result = parseHaremMessage(message)
+
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+
+    expect(result.profileName).toBe('')
+    expect(result.series.map((series) => series.name)).toEqual(['Amagami'])
+  })
 })
