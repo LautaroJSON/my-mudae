@@ -45,6 +45,11 @@ export const Card = styled.article`
       opacity: 1;
       pointer-events: auto;
     }
+
+    &:hover [data-rank-badge],
+    &:focus-within [data-rank-badge] {
+      opacity: 1;
+    }
   }
 
   // Mobile: card a la mitad de ancho/alto de imagen (72px/112px, la
@@ -75,7 +80,7 @@ export const Body = styled.div`
   gap: ${(props) => props.theme.spacing.xxs};
 
   // Mobile: alto intrínseco (no 76px fijo) con padding más ajustado —
-  // el texto no se achica más (Name/Meta ya están en el piso de la
+  // el texto no se achica más (el nombre ya está en el piso de la
   // escala tipográfica), pero el contenedor deja de reservar espacio
   // fijo que ya no hace falta con la card compacta.
   @media (max-width: ${(props) => props.theme.breakpoints.sm}) {
@@ -84,20 +89,25 @@ export const Body = styled.div`
   }
 `;
 
-export const Name = styled.span`
-  font-size: ${(props) => props.theme.typography.size.sm};
-  font-weight: ${(props) => props.theme.typography.weight.semibold};
-  line-height: ${(props) => props.theme.typography.lineHeight.tight};
-  color: ${(props) => props.theme.colors.textPrimary};
-`;
-
-export const Meta = styled.span`
+export const RankBadge = styled.span`
+  position: absolute;
+  top: ${(props) => props.theme.spacing.xs};
+  left: ${(props) => props.theme.spacing.xs};
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem ${(props) => props.theme.spacing.xs};
+  border-radius: ${(props) => props.theme.radii.pill};
+  background: ${(props) => props.theme.colors.surface};
+  box-shadow: ${(props) => props.theme.colors.shadowSm};
+  color: ${(props) => props.theme.colors.textSecondary};
   font-size: ${(props) => props.theme.typography.size.xs};
   font-family: ${(props) => props.theme.typography.fontMono};
-  color: ${(props) => props.theme.colors.textSecondary};
+  pointer-events: none;
 
-  @media (max-width: ${(props) => props.theme.breakpoints.sm}) {
-    line-height: ${(props) => props.theme.typography.lineHeight.tight};
+  @media (hover: hover) and (pointer: fine) {
+    opacity: 0;
+    transition: opacity ${(props) => props.theme.motion.duration.fast} ${(props) => props.theme.motion.easing};
   }
 `;
 

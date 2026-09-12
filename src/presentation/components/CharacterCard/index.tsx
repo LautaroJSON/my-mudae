@@ -1,14 +1,14 @@
 import { memo, type CSSProperties } from "react";
 import type { Character } from "../../../domain/harem/Character";
 import CopyNameButton from "../CopyNameButton";
+import CharacterName from "../CharacterName";
 import {
   Body,
   Card,
   Image,
   ImageContainer,
   Kakera,
-  Meta,
-  Name,
+  RankBadge,
 } from "./styles";
 import { GemIcon } from "lucide-react";
 
@@ -23,6 +23,9 @@ interface ICharacterCard {
 const CharacterCard = ({ character, staggerIndex = 0 }: ICharacterCard) => {
   return (
     <Card style={{ "--mm-stagger-index": staggerIndex } as CSSProperties}>
+      {character.claimRank && (
+        <RankBadge data-rank-badge>{character.claimRank}</RankBadge>
+      )}
       <CopyNameButton characterName={character.name} />
       <ImageContainer>
         <Image
@@ -33,7 +36,7 @@ const CharacterCard = ({ character, staggerIndex = 0 }: ICharacterCard) => {
         />
       </ImageContainer>
       <Body>
-        <Name>{character.name}</Name>
+        <CharacterName name={character.name} />
         {character.kakera !== undefined && (
           <div
             style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}
@@ -46,7 +49,6 @@ const CharacterCard = ({ character, staggerIndex = 0 }: ICharacterCard) => {
             <Kakera>{character.kakera}</Kakera>
           </div>
         )}
-        {character.claimRank && <Meta>{character.claimRank}</Meta>}
       </Body>
     </Card>
   );
