@@ -68,28 +68,36 @@ export const DragHandle = styled.button`
   }
 `;
 
-export const CharacterList = styled.div`
+export const CharacterList = styled.div<{ $widthCant?: number }>`
   display: flex;
-  /* nowrap + overflow-x: los personajes de una serie van siempre en una
-     sola fila; al llegar al ancho máximo disponible, la lista scrollea
-     horizontalmente en vez de saltar a una segunda línea. */
   flex-wrap: nowrap;
+  /* justify-content: center; */
+  /* align-self: flex-start; */
+  /* align-items: flex-start; */
+
   overflow-x: auto;
   overflow-y: hidden;
+
+  height: 325px;
+
+  width: ${(props) =>
+    props.$widthCant ? (props.$widthCant === 1 ? "144px" : "100%") : "100%"};
+  /* max-width: 925px; */
+
   gap: ${(props) => props.theme.spacing.md};
-  /* Crítico: sin esto, CharacterList hereda el align-items: stretch por
-     defecto de Section (flex-direction: column) y se estira para
-     igualar el ancho YA resuelto de Section -- que, mientras el
-     encabezado todavía no está acotado, puede ser más ancho que las
-     tarjetas (por el nombre de la serie). Eso hace que la medición por
-     ResizeObserver en index.tsx termine devolviendo ese ancho inflado
-     en vez del ancho real de las tarjetas, dejando el "cap" del
-     encabezado sin efecto. flex-start hace que CharacterList siempre
-     reporte su propio ancho de contenido, sin importar qué tan ancho
-     esté Section en ese momento. También es lo que, con overflow-x,
-     acota su ancho visible al espacio disponible en vez de crecer sin
-     límite -- disparando el scroll horizontal en ese punto.
-  */
-  align-self: flex-start;
-  max-width: 100%;
+
+  // Mobile: las CharacterCard pasan a ~72px de ancho y alto intrínseco
+  // (ver CharacterCard/styles.tsx) — sin este ajuste, el alto fijo de
+  // 325px (pensado para la card de 300px de desktop + margen de
+  // scrollbar) dejaría un espacio vacío grande debajo de las tarjetas
+  // achicadas. El alto pasa a auto: es seguro en mobile porque los
+  // navegadores táctiles usan scrollbars superpuestas que no reservan
+  // alto de layout. El gap también baja, proporcional al ancho de card
+  // reducido.
+  @media (max-width: ${(props) => props.theme.breakpoints.sm}) {
+    height: auto;
+    gap: ${(props) => props.theme.spacing.sm};
+    width: ${(props) =>
+      props.$widthCant ? (props.$widthCant === 1 ? "72px" : "100%") : "100%"};
+  }
 `;

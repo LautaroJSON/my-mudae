@@ -1,7 +1,16 @@
 import { memo, type CSSProperties } from "react";
 import type { Character } from "../../../domain/harem/Character";
 import CopyNameButton from "../CopyNameButton";
-import { Body, Card, Image, ImageContainer, Meta, Name } from "./styles";
+import {
+  Body,
+  Card,
+  Image,
+  ImageContainer,
+  Kakera,
+  Meta,
+  Name,
+} from "./styles";
+import { GemIcon } from "lucide-react";
 
 interface ICharacterCard {
   character: Character;
@@ -26,7 +35,16 @@ const CharacterCard = ({ character, staggerIndex = 0 }: ICharacterCard) => {
       <Body>
         <Name>{character.name}</Name>
         {character.kakera !== undefined && (
-          <Meta>{character.kakera} kakera</Meta>
+          <div
+            style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}
+          >
+            <GemIcon
+              size={12}
+              color={"var(--mm-color-accent)"}
+              fill={"var(--mm-color-accent-hover)"}
+            />
+            <Kakera>{character.kakera}</Kakera>
+          </div>
         )}
         {character.claimRank && <Meta>{character.claimRank}</Meta>}
       </Body>

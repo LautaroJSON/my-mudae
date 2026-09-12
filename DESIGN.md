@@ -149,6 +149,16 @@ puro `#000000`). El modo se activa automáticamente por
   densidad "Balanceada", cada `CharacterCard` mide 9rem y las tarjetas
   fluyen según el ancho disponible — mobile-first por construcción, sin
   necesidad de breakpoints manuales para el grid en sí.
+- Segundo nivel de densidad, "Compacta", para `≤640px` (`theme.
+  breakpoints.sm`, primer uso real de ese token): `CharacterCard` pasa a
+  4.5rem/72px de ancho (con su imagen a 7rem/112px, la mitad exacta de
+  9rem/14rem — preserva el ratio 9:14) y a alto intrínseco en vez de
+  fijo. A diferencia del punto anterior (que resuelve el *acomodo* de
+  las tarjetas sin breakpoints), acá sí hace falta un breakpoint manual
+  porque lo que cambia es el *tamaño propio* de la tarjeta, no cómo
+  fluye — pensado para reducir cuánto ocupa cada personaje en pantallas
+  chicas sin perder legibilidad del texto (que no se achica más allá del
+  tamaño ya usado en desktop).
 - Grupos de serie también en `flex-wrap`, un nivel arriba de la grilla de
   personajes, pero **sin ancho de columna fijo/uniforme**: cada grupo de
   serie mide exactamente lo que necesita su propio contenido (una serie
