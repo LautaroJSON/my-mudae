@@ -7,6 +7,8 @@ import { Item } from './styles'
 
 interface ISeriesGroupItem {
   series: Series
+  /** Deshabilita el arrastre de esta serie mientras el ordenamiento temporal por kakera está activo (FR-015 de 010). */
+  dragDisabled?: boolean
 }
 
 /**
@@ -25,8 +27,8 @@ interface ISeriesGroupItem {
  * arrastra (estira/achica de forma no uniforme). `CSS.Translate` evita
  * ese efecto por completo.
  */
-const SeriesGroupItem = ({ series }: ISeriesGroupItem) => {
-  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: series.id })
+const SeriesGroupItem = ({ series, dragDisabled }: ISeriesGroupItem) => {
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: series.id, disabled: dragDisabled })
 
   const style: CSSProperties = {
     transform: CSS.Translate.toString(transform),
@@ -35,7 +37,7 @@ const SeriesGroupItem = ({ series }: ISeriesGroupItem) => {
 
   return (
     <Item ref={setNodeRef} style={style}>
-      <SeriesGroup series={series} dragHandleProps={{ attributes, listeners }} />
+      <SeriesGroup series={series} dragHandleProps={{ attributes, listeners }} dragDisabled={dragDisabled} />
     </Item>
   )
 }

@@ -35,6 +35,8 @@ interface ISeriesGroup {
     attributes: DraggableAttributes;
     listeners: DraggableSyntheticListeners;
   };
+  /** Deshabilita el arrastre de la serie y de sus personajes mientras el ordenamiento temporal por kakera está activo (FR-015 de 010). */
+  dragDisabled?: boolean;
 }
 
 /**
@@ -46,7 +48,7 @@ interface ISeriesGroup {
  * personaje arrastrado nunca tiene ningún droppable fuera de esta
  * instancia al que soltarse (FR-005, ver research.md).
  */
-const SeriesGroup = ({ series, dragHandleProps }: ISeriesGroup) => {
+const SeriesGroup = ({ series, dragHandleProps, dragDisabled }: ISeriesGroup) => {
   const { reorderCharactersInSeries } = useProfiles();
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -112,6 +114,7 @@ const SeriesGroup = ({ series, dragHandleProps }: ISeriesGroup) => {
           <DragHandle
             type="button"
             aria-label={`Reordenar serie ${series.name}`}
+            disabled={dragDisabled}
             {...dragHandleProps.attributes}
             {...dragHandleProps.listeners}
           >
@@ -139,6 +142,7 @@ const SeriesGroup = ({ series, dragHandleProps }: ISeriesGroup) => {
                 key={character.id}
                 character={character}
                 staggerIndex={Math.min(index, 12)}
+                dragDisabled={dragDisabled}
               />
             ))}
           </CharacterList>

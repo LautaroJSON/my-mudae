@@ -1,5 +1,6 @@
 import { ThemeProvider } from 'styled-components'
 import ProfilesProvider, { useProfiles } from './context/ProfilesContext'
+import HaremSortProvider from './context/HaremSortContext'
 import Header from './components/Header'
 import HaremView from './components/HaremView'
 import SettingsFab from './components/SettingsFab'
@@ -45,7 +46,9 @@ const App = () => {
     <ThemeProvider theme={theme}>
       <GlobalStyle />
       <ProfilesProvider>
-        <AppContent />
+        <HaremSortProvider>
+          <AppContent />
+        </HaremSortProvider>
       </ProfilesProvider>
     </ThemeProvider>
   )

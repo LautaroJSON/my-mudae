@@ -1,7 +1,8 @@
 import { DndContext, KeyboardSensor, PointerSensor, closestCenter, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core'
 import { SortableContext, rectSortingStrategy, sortableKeyboardCoordinates } from '@dnd-kit/sortable'
-import type { Harem } from '../../../domain/harem/Harem'
+import { sortHaremByKakera, type Harem } from '../../../domain/harem/Harem'
 import { useProfiles } from '../../context/ProfilesContext'
+import { useHaremSort } from '../../context/HaremSortContext'
 import { computeReorderedIds } from '../../computeReorderedIds'
 import SeriesGroupItem from '../SeriesGroupItem'
 import { Container, EmptyMessage } from './styles'
@@ -18,9 +19,17 @@ interface IHaremView {
  * (FR-007) — cada `SeriesGroup`/`CharacterCard` sigue memoizado por
  * props (Principio III): reordenar una serie o un personaje de otra no
  * debe volver a renderizar el contenido pesado de esta.
+ *
+ * Cuando el ordenamiento temporal por kakera (010) está activo, lo que
+ * se renderiza es `sortHaremByKakera(harem, direction)` en vez de
+ * `harem` tal cual — nunca se le pasa ese resultado a `reorderSeries`
+ * (que sigue operando sobre `harem`, el orden manual real, Principio
+ * II) y el drag-and-drop se deshabilita mientras está activo (FR-015),
+ * ver `dragDisabled` en `SeriesGroupItem`.
  */
 const HaremView = ({ harem }: IHaremView) => {
   const { reorderSeries } = useProfiles()
+  const { isActive, direction } = useHaremSort()
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
@@ -30,7 +39,8 @@ const HaremView = ({ harem }: IHaremView) => {
     return <EmptyMessage>Este perfil todavía no tiene personajes.</EmptyMessage>
   }
 
-  const seriesIds = harem.series.map((series) => series.id)
+  const displayedHarem = isActive ? sortHaremByKakera(harem, direction) : harem
+  const seriesIds = displayedHarem.series.map((series) => series.id)
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event
@@ -44,8 +54,8 @@ const HaremView = ({ harem }: IHaremView) => {
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
       <SortableContext items={seriesIds} strategy={rectSortingStrategy}>
         <Container>
-          {harem.series.map((series) => (
-            <SeriesGroupItem key={series.id} series={series} />
+          {displayedHarem.series.map((series) => (
+            <SeriesGroupItem key={series.id} series={series} dragDisabled={isActive} />
           ))}
         </Container>
       </SortableContext>

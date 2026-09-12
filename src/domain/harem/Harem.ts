@@ -110,3 +110,35 @@ export function sumKakera(harem: Harem): number {
     0,
   )
 }
+
+export type KakeraSortDirection = 'asc' | 'desc'
+
+function seriesKakeraValue(series: Series): number {
+  return series.characters.reduce((total, character) => total + (character.kakera ?? 0), 0)
+}
+
+/**
+ * Devuelve una vista temporal del harem ordenada por valor de kakera
+ * (User Story 1/2 de 010): dentro de cada serie, sus personajes por su
+ * propio `kakera` (`?? 0`, mismo criterio que `sumKakera`); entre
+ * series, por la suma de kakera de sus personajes. Nunca muta `harem` ni
+ * ninguna `Series`/`Character` de entrada (devuelve arrays nuevos en
+ * ambos niveles) y nunca se persiste: quien la invoca decide si la usa
+ * para renderizar en lugar del `Harem` real (ver Principio II — el
+ * comando `$sm` de 009 sigue leyendo el `Harem` sin ordenar).
+ * `Array.prototype.sort` es estable, así que los empates conservan el
+ * orden relativo original sin necesitar un comparador de desempate
+ * (FR-014).
+ */
+export function sortHaremByKakera(harem: Harem, direction: KakeraSortDirection): Harem {
+  const factor = direction === 'desc' ? -1 : 1
+
+  const series = harem.series
+    .map((series) => ({
+      ...series,
+      characters: [...series.characters].sort((a, b) => factor * ((a.kakera ?? 0) - (b.kakera ?? 0))),
+    }))
+    .sort((a, b) => factor * (seriesKakeraValue(a) - seriesKakeraValue(b)))
+
+  return { ...harem, series }
+}

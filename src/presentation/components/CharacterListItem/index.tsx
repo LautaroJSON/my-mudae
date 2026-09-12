@@ -9,6 +9,8 @@ interface ICharacterListItem {
   character: Character
   /** Posición dentro de la serie, se reenvía a CharacterCard para la cascada de entrada. */
   staggerIndex?: number
+  /** Deshabilita el arrastre de este personaje mientras el ordenamiento temporal por kakera está activo (FR-015 de 010). */
+  dragDisabled?: boolean
 }
 
 /**
@@ -33,8 +35,11 @@ interface ICharacterListItem {
  * posición (mismo criterio que suelen usar las listas ordenables de
  * `@dnd-kit`).
  */
-const CharacterListItem = ({ character, staggerIndex }: ICharacterListItem) => {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: character.id })
+const CharacterListItem = ({ character, staggerIndex, dragDisabled }: ICharacterListItem) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: character.id,
+    disabled: dragDisabled,
+  })
 
   const style: CSSProperties = {
     transform: CSS.Translate.toString(transform),

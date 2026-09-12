@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import HaremView from '../../../src/presentation/components/HaremView'
 import ProfilesProvider from '../../../src/presentation/context/ProfilesContext'
+import HaremSortProvider from '../../../src/presentation/context/HaremSortContext'
 import { renderWithTheme } from '../../support/renderWithTheme'
 import { InMemoryProfileRepository } from '../../support/InMemoryProfileRepository'
 import type { Harem } from '../../../src/domain/harem/Harem'
@@ -47,7 +48,9 @@ describe('HaremView - escala con harems grandes (Principio III)', () => {
     const start = performance.now()
     const { getAllByRole } = renderWithTheme(
       <ProfilesProvider repository={repository}>
-        <HaremView harem={harem} />
+        <HaremSortProvider>
+          <HaremView harem={harem} />
+        </HaremSortProvider>
       </ProfilesProvider>,
     )
     const elapsedMs = performance.now() - start

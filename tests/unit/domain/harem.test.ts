@@ -4,6 +4,7 @@ import {
   reorderCharactersInSeries,
   reorderSeries,
   removeCharacterFromSeries,
+  sortHaremByKakera,
   sumKakera,
 } from '../../../src/domain/harem/Harem'
 import type { Harem } from '../../../src/domain/harem/Harem'
@@ -224,5 +225,149 @@ describe('reorderSeries', () => {
     const next = reorderSeries(harem, [])
 
     expect(next.series.map((series) => series.id)).toEqual(['series-1', 'series-2', 'series-3'])
+  })
+})
+
+describe('sortHaremByKakera', () => {
+  it('ordena los personajes de una serie de forma descendente por kakera', () => {
+    const harem: Harem = {
+      profileId: 'profile-1',
+      series: [
+        {
+          id: 'series-1',
+          name: 'Amagami',
+          characters: [
+            { id: 'char-1', name: 'A', imageUrl: 'https://x/1.png', kakera: 5 },
+            { id: 'char-2', name: 'B', imageUrl: 'https://x/2.png', kakera: 20 },
+            { id: 'char-3', name: 'C', imageUrl: 'https://x/3.png', kakera: 1 },
+          ],
+        },
+      ],
+    }
+
+    const next = sortHaremByKakera(harem, 'desc')
+
+    const amagami = next.series.find((series) => series.id === 'series-1')
+    expect(amagami?.characters.map((c) => c.id)).toEqual(['char-2', 'char-1', 'char-3'])
+  })
+
+  it('ordena los personajes de una serie de forma ascendente por kakera', () => {
+    const harem: Harem = {
+      profileId: 'profile-1',
+      series: [
+        {
+          id: 'series-1',
+          name: 'Amagami',
+          characters: [
+            { id: 'char-1', name: 'A', imageUrl: 'https://x/1.png', kakera: 5 },
+            { id: 'char-2', name: 'B', imageUrl: 'https://x/2.png', kakera: 20 },
+            { id: 'char-3', name: 'C', imageUrl: 'https://x/3.png', kakera: 1 },
+          ],
+        },
+      ],
+    }
+
+    const next = sortHaremByKakera(harem, 'asc')
+
+    const amagami = next.series.find((series) => series.id === 'series-1')
+    expect(amagami?.characters.map((c) => c.id)).toEqual(['char-3', 'char-1', 'char-2'])
+  })
+
+  it('ordena las series entre sí por la suma de kakera de sus personajes', () => {
+    const harem: Harem = {
+      profileId: 'profile-1',
+      series: [
+        {
+          id: 'series-1',
+          name: 'Amagami',
+          characters: [{ id: 'char-1', name: 'A', imageUrl: 'https://x/1.png', kakera: 10 }],
+        },
+        {
+          id: 'series-2',
+          name: 'Black Clover',
+          characters: [{ id: 'char-2', name: 'B', imageUrl: 'https://x/2.png', kakera: 50 }],
+        },
+        {
+          id: 'series-3',
+          name: 'Chainsaw Man',
+          characters: [{ id: 'char-3', name: 'C', imageUrl: 'https://x/3.png', kakera: 25 }],
+        },
+      ],
+    }
+
+    const desc = sortHaremByKakera(harem, 'desc')
+    expect(desc.series.map((series) => series.id)).toEqual(['series-2', 'series-3', 'series-1'])
+
+    const asc = sortHaremByKakera(harem, 'asc')
+    expect(asc.series.map((series) => series.id)).toEqual(['series-1', 'series-3', 'series-2'])
+  })
+
+  it('mantiene el orden relativo original entre series con la misma suma de kakera, en ambas direcciones', () => {
+    const harem: Harem = {
+      profileId: 'profile-1',
+      series: [
+        {
+          id: 'series-1',
+          name: 'Amagami',
+          characters: [{ id: 'char-1', name: 'A', imageUrl: 'https://x/1.png', kakera: 30 }],
+        },
+        {
+          id: 'series-2',
+          name: 'Black Clover',
+          characters: [{ id: 'char-2', name: 'B', imageUrl: 'https://x/2.png', kakera: 30 }],
+        },
+      ],
+    }
+
+    expect(sortHaremByKakera(harem, 'desc').series.map((series) => series.id)).toEqual(['series-1', 'series-2'])
+    expect(sortHaremByKakera(harem, 'asc').series.map((series) => series.id)).toEqual(['series-1', 'series-2'])
+  })
+
+  it('trata un personaje sin kakera como 0 (FR-013)', () => {
+    const harem: Harem = {
+      profileId: 'profile-1',
+      series: [
+        {
+          id: 'series-1',
+          name: 'Amagami',
+          characters: [
+            { id: 'char-1', name: 'A', imageUrl: 'https://x/1.png', kakera: 5 },
+            { id: 'char-2', name: 'B', imageUrl: 'https://x/2.png' },
+          ],
+        },
+      ],
+    }
+
+    const desc = sortHaremByKakera(harem, 'desc')
+    const amagami = desc.series.find((series) => series.id === 'series-1')
+    expect(amagami?.characters.map((c) => c.id)).toEqual(['char-1', 'char-2'])
+  })
+
+  it('no muta el harem recibido', () => {
+    const harem = buildHaremWithThreeSeries()
+    const snapshot = JSON.parse(JSON.stringify(harem))
+
+    sortHaremByKakera(harem, 'desc')
+
+    expect(harem).toEqual(snapshot)
+  })
+
+  it('conserva el mismo conjunto de ids de series y de personajes que la entrada', () => {
+    const harem = buildHaremWithThreeCharactersInFirstSeries()
+
+    const next = sortHaremByKakera(harem, 'desc')
+
+    expect(new Set(next.series.map((series) => series.id))).toEqual(new Set(harem.series.map((series) => series.id)))
+    const originalCharacterIds = harem.series.flatMap((series) => series.characters.map((c) => c.id))
+    const nextCharacterIds = next.series.flatMap((series) => series.characters.map((c) => c.id))
+    expect(new Set(nextCharacterIds)).toEqual(new Set(originalCharacterIds))
+  })
+
+  it('tolera un harem sin series', () => {
+    const harem: Harem = { profileId: 'profile-1', series: [] }
+
+    const next = sortHaremByKakera(harem, 'desc')
+
+    expect(next.series).toEqual([])
   })
 })

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { screen, within } from '@testing-library/react'
 import HaremView from '../../../src/presentation/components/HaremView'
 import ProfilesProvider from '../../../src/presentation/context/ProfilesContext'
+import HaremSortProvider from '../../../src/presentation/context/HaremSortContext'
 import { renderWithTheme } from '../../support/renderWithTheme'
 import { InMemoryProfileRepository } from '../../support/InMemoryProfileRepository'
 import type { Harem } from '../../../src/domain/harem/Harem'
@@ -50,7 +51,9 @@ function renderHaremView(harem: Harem) {
   const repository = new InMemoryProfileRepository([profile])
   return renderWithTheme(
     <ProfilesProvider repository={repository}>
-      <HaremView harem={harem} />
+      <HaremSortProvider>
+        <HaremView harem={harem} />
+      </HaremSortProvider>
     </ProfilesProvider>,
   )
 }
