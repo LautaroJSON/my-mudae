@@ -3,6 +3,7 @@ import ProfilesProvider, { useProfiles } from './context/ProfilesContext'
 import Header from './components/Header'
 import HaremView from './components/HaremView'
 import SettingsFab from './components/SettingsFab'
+import SortCommandToggle from './components/SortCommandToggle'
 import GlobalStyle from './GlobalStyle'
 import { EmptyState } from './AppStyles'
 import { theme } from '../shared/theme'
@@ -22,6 +23,7 @@ const AppContent = () => {
     <>
       <Header />
       <SettingsFab />
+      <SortCommandToggle />
       {urlProfileStatus === 'not-found' ? (
         <EmptyState role="alert">
           El perfil que buscás no existe — puede que el enlace esté desactualizado. Abrí el menú de arriba a la
