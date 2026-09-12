@@ -149,4 +149,87 @@ Serie Con Personajes - 1/5
 
     expect(result.series.map((series) => series.name)).toEqual(['Serie Con Personajes'])
   })
+
+  it('normaliza una imagen personalizada de imgur.com a i.imgur.com (edge case: link "custom" que no carga)', () => {
+    const message = `alguien's harem
+
+Amagami - 1/11
+#182 - Noelle Silva 5 ka - https://imgur.com/z3hIPIX.png`
+
+    const result = parseHaremMessage(message)
+
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+
+    expect(result.series[0].characters[0].imageUrl).toBe('https://i.imgur.com/z3hIPIX.png')
+  })
+
+  it('normaliza también www.imgur.com a i.imgur.com', () => {
+    const message = `alguien's harem
+
+Amagami - 1/11
+#182 - Noelle Silva - https://www.imgur.com/z3hIPIX.png`
+
+    const result = parseHaremMessage(message)
+
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+
+    expect(result.series[0].characters[0].imageUrl).toBe('https://i.imgur.com/z3hIPIX.png')
+  })
+
+  it('no modifica una imagen que ya viene de i.imgur.com ni de mudae.net', () => {
+    const message = `alguien's harem
+
+Amagami - 1/11
+#182 - Noelle Silva 5 ka - https://i.imgur.com/z3hIPIX.png
+#183 - Otro Personaje - https://mudae.net/uploads/1/a.png`
+
+    const result = parseHaremMessage(message)
+
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+
+    const [first, second] = result.series[0].characters
+    expect(first.imageUrl).toBe('https://i.imgur.com/z3hIPIX.png')
+    expect(second.imageUrl).toBe('https://mudae.net/uploads/1/a.png')
+  })
+
+  it('reconoce una línea de personaje cuya URL viene envuelta en "<...>" (Discord suprime el embed de imágenes personalizadas)', () => {
+    const message = `alguien's harem
+
+Amagami - 1/11
+#182 - Noelle Silva 5 ka - <https://imgur.com/z3hIPIX.png>`
+
+    const result = parseHaremMessage(message)
+
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+
+    expect(result.series[0].characters[0]).toEqual({
+      claimRank: '#182',
+      name: 'Noelle Silva',
+      kakera: 5,
+      imageUrl: 'https://i.imgur.com/z3hIPIX.png',
+    })
+  })
+
+  it('reconoce una línea de personaje sin kakera cuya URL viene envuelta en "<...>"', () => {
+    const message = `alguien's harem
+
+Amagami - 1/11
+#182 - Noelle Silva - <https://mudae.net/uploads/1/a.png>`
+
+    const result = parseHaremMessage(message)
+
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+
+    expect(result.series[0].characters[0]).toEqual({
+      claimRank: '#182',
+      name: 'Noelle Silva',
+      kakera: undefined,
+      imageUrl: 'https://mudae.net/uploads/1/a.png',
+    })
+  })
 })
