@@ -26,22 +26,31 @@ export type ParsedHaremMessage =
 const PROFILE_HEADER = /^(.+)'s harem$/
 
 // "Amagami - 5/11" → nombre de serie (la fracción X/Y se descarta).
-const SERIES_HEADER = /^(.+) - \d[\d,]*\/\d[\d,]*$/
+// Los números grandes de Mudae pueden venir con "," o "." como separador
+// de miles según el idioma/config del bot (p. ej. "1.234" en vez de
+// "1,234"); ambos se aceptan en todos los números de esta línea.
+const SERIES_HEADER = /^(.+) - \d[\d.,]*\/\d[\d.,]*$/
 
 // "#15,140 - Haruka Morishima 49 ka - https://mudae.net/uploads/...png"
 // La URL puede venir envuelta en "<...>" (p. ej. "<https://imgur.com/x.png>"):
 // Discord/Mudae suprimen así la previsualización de embed para imágenes
 // personalizadas (no-mudae.net) en harems largos. Los "<"/">" se excluyen
 // de la captura para no terminar con una URL inválida con ese sobrante.
+// El claim rank y el kakera aceptan "," o "." como separador de miles
+// (p. ej. kakera "1.000" arriba de 999) — ver `parseKakeraValue`.
 const CHARACTER_WITH_KAKERA =
-  /^#([\d,]+) - (.+?) (\d[\d,]*) ka - <?(https?:\/\/[^\s<>]+)>?$/
+  /^#([\d.,]+) - (.+?) (\d[\d.,]*) ka - <?(https?:\/\/[^\s<>]+)>?$/
 
 // Variante sin kakera reconocible (FR-006), p. ej. cuando Mudae todavía no
 // lo calculó: "#182 - Noelle Silva - https://mudae.net/uploads/...png"
-const CHARACTER_WITHOUT_KAKERA = /^#([\d,]+) - (.+?) - <?(https?:\/\/[^\s<>]+)>?$/
+const CHARACTER_WITHOUT_KAKERA = /^#([\d.,]+) - (.+?) - <?(https?:\/\/[^\s<>]+)>?$/
 
+// El kakera de Mudae siempre es un entero (nunca fraccionario), así que
+// tanto "," como "." que aparezcan en el número son separador de miles,
+// nunca un punto decimal: "1.000"/"1,000" ka → 1000 (FR-006 original;
+// edge case de kakera de 4+ dígitos con separador de miles).
 function parseKakeraValue(raw: string): number {
-  return Number(raw.replace(/,/g, ''))
+  return Number(raw.replace(/[.,]/g, ''))
 }
 
 /**

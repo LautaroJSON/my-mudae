@@ -232,4 +232,61 @@ Amagami - 1/11
       imageUrl: 'https://mudae.net/uploads/1/a.png',
     })
   })
+
+  it('reconoce un kakera de 4+ dígitos con "." como separador de miles y lo guarda como número plano (edge case: kakera > 999)', () => {
+    const message = `alguien's harem
+
+Amagami - 1/11
+#182 - Noelle Silva 1.000 ka - https://mudae.net/uploads/1/a.png`
+
+    const result = parseHaremMessage(message)
+
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+
+    expect(result.series[0].characters[0]).toEqual({
+      claimRank: '#182',
+      name: 'Noelle Silva',
+      kakera: 1000,
+      imageUrl: 'https://mudae.net/uploads/1/a.png',
+    })
+  })
+
+  it('reconoce un kakera de varios miles con "." como separador (ej. 12.345) sin romper el resto de la línea', () => {
+    const message = `alguien's harem
+
+Amagami - 1/11
+#1.234 - Noelle Silva 12.345 ka - https://mudae.net/uploads/1/a.png`
+
+    const result = parseHaremMessage(message)
+
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+
+    expect(result.series[0].characters[0]).toEqual({
+      claimRank: '#1.234',
+      name: 'Noelle Silva',
+      kakera: 12345,
+      imageUrl: 'https://mudae.net/uploads/1/a.png',
+    })
+  })
+
+  it('sigue reconociendo el separador de miles "," de siempre (kakera y claim rank) sin cambios', () => {
+    const message = `alguien's harem
+
+Amagami - 1/11
+#15,140 - Haruka Morishima 1,000 ka - https://mudae.net/x.png`
+
+    const result = parseHaremMessage(message)
+
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+
+    expect(result.series[0].characters[0]).toEqual({
+      claimRank: '#15,140',
+      name: 'Haruka Morishima',
+      kakera: 1000,
+      imageUrl: 'https://mudae.net/x.png',
+    })
+  })
 })
