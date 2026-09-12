@@ -12,9 +12,13 @@ import { renameProfile as renameProfileUseCase } from '../../application/useCase
 import { reorderProfiles as reorderProfilesUseCase } from '../../application/useCases/reorderProfiles'
 import { reorderCharactersInSeries as reorderCharactersInSeriesUseCase } from '../../application/useCases/reorderCharactersInSeries'
 import { reorderSeries as reorderSeriesUseCase } from '../../application/useCases/reorderSeries'
+import {
+  updateActiveProfileHarem as updateActiveProfileHaremUseCase,
+  type UpdateActiveProfileHaremResult,
+} from '../../application/useCases/updateActiveProfileHarem'
 import { getProfileIdFromUrl } from '../urlParams'
 
-export type { CreateProfileFromPasteResult }
+export type { CreateProfileFromPasteResult, UpdateActiveProfileHaremResult }
 
 export type UrlProfileStatus = 'none' | 'activated' | 'not-found'
 
@@ -67,6 +71,8 @@ export interface IProfilesContext {
   reorderCharactersInSeries: (seriesId: string, orderedCharacterIds: string[]) => void
   /** Reordena las series del harem del perfil activo (User Story 3 de 003). No hace nada si no hay perfil activo. */
   reorderSeries: (orderedSeriesIds: string[]) => void
+  /** Sobrescribe el harem del perfil activo con un nuevo pegado (User Story 1 de 005). Devuelve `NO_ACTIVE_PROFILE` sin llamar al caso de uso si no hay perfil activo. */
+  updateActiveProfileHarem: (rawText: string) => UpdateActiveProfileHaremResult
 }
 
 const ProfilesContext = createContext<IProfilesContext | undefined>(undefined)
@@ -131,6 +137,17 @@ const ProfilesProvider = ({ children, repository }: IProfilesProvider) => {
     syncFromRepository()
   }
 
+  const updateActiveProfileHarem: IProfilesContext['updateActiveProfileHarem'] = (rawText) => {
+    if (!activeProfile) {
+      return { ok: false, reason: 'NO_ACTIVE_PROFILE' }
+    }
+    const result = updateActiveProfileHaremUseCase(activeRepository, activeProfile.id, rawText)
+    if (result.ok) {
+      syncFromRepository()
+    }
+    return result
+  }
+
   const value: IProfilesContext = {
     profiles,
     activeProfile,
@@ -142,6 +159,7 @@ const ProfilesProvider = ({ children, repository }: IProfilesProvider) => {
     reorderProfiles,
     reorderCharactersInSeries,
     reorderSeries,
+    updateActiveProfileHarem,
   }
 
   return <ProfilesContext.Provider value={value}>{children}</ProfilesContext.Provider>

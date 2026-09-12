@@ -51,8 +51,9 @@ describe('HaremView - escala con harems grandes (Principio III)', () => {
     )
     const elapsedMs = performance.now() - start
 
-    // 30 series + 210 personajes = 240 superficies de arrastre (role="button").
-    expect(getAllByRole('button')).toHaveLength(240)
+    // 30 series + 210 personajes = 240 superficies de arrastre (role="button"),
+    // más un botón "copiar nombre" (006) por cada uno de los 210 personajes.
+    expect(getAllByRole('button')).toHaveLength(240 + 210)
     // Presupuesto generoso (no es una medición de fluidez real, ver nota
     // arriba): detecta una regresión catastrófica (ej. O(n²)), no jank.
     expect(elapsedMs).toBeLessThan(5000)

@@ -12,6 +12,7 @@ const fadeInUp = keyframes`
 `;
 
 export const Card = styled.article`
+  position: relative;
   display: grid;
   grid-template-rows: 224px auto;
 
@@ -27,6 +28,22 @@ export const Card = styled.article`
     var(--mm-stagger-index, 0) *
       ${(props) => props.theme.motion.staggerStepMs}ms
   );
+  transition:
+    border-color ${(props) => props.theme.motion.duration.fast} ${(props) => props.theme.motion.easing},
+    box-shadow ${(props) => props.theme.motion.duration.fast} ${(props) => props.theme.motion.easing};
+
+  &:hover {
+    border-color: ${(props) => props.theme.colors.accent};
+    box-shadow: ${(props) => props.theme.colors.shadowSm};
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover [data-copy-name-button],
+    &:focus-within [data-copy-name-button] {
+      opacity: 1;
+      pointer-events: auto;
+    }
+  }
 `;
 
 export const Image = styled.img`

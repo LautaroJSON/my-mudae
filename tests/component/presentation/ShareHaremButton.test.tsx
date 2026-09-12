@@ -78,7 +78,7 @@ describe('ShareHaremButton', () => {
     expect(mockedCopyTextToClipboard).toHaveBeenCalledWith(
       expect.stringContaining("rodoifin's harem"),
     )
-    expect(await screen.findByText(/copiado al portapapeles/i)).toBeInTheDocument()
+    expect(await screen.findByRole('button', { name: /harem copiado/i })).toBeInTheDocument()
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
@@ -92,7 +92,7 @@ describe('ShareHaremButton', () => {
     const dialog = await screen.findByRole('dialog')
     expect(dialog).toHaveTextContent(/no se pudo copiar automáticamente/i)
     expect((screen.getByRole('textbox') as HTMLTextAreaElement).value).toContain("rodoifin's harem")
-    expect(screen.queryByText(/copiado al portapapeles/i)).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /harem copiado/i })).not.toBeInTheDocument()
   })
 
   it('confirmar el diálogo de copiado manual muestra el mismo feedback de éxito', async () => {
@@ -105,7 +105,7 @@ describe('ShareHaremButton', () => {
     await user.click(screen.getByRole('button', { name: /ya lo copié/i }))
 
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
-    expect(await screen.findByText(/copiado al portapapeles/i)).toBeInTheDocument()
+    expect(await screen.findByRole('button', { name: /harem copiado/i })).toBeInTheDocument()
   })
 
   it('cerrar el diálogo de copiado manual sin confirmar no muestra ningún feedback', async () => {
@@ -118,6 +118,6 @@ describe('ShareHaremButton', () => {
     await user.keyboard('{Escape}')
 
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
-    expect(screen.queryByText(/copiado al portapapeles/i)).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /harem copiado/i })).not.toBeInTheDocument()
   })
 })

@@ -75,6 +75,7 @@ export const CharacterList = styled.div`
      horizontalmente en vez de saltar a una segunda línea. */
   flex-wrap: nowrap;
   overflow-x: auto;
+  overflow-y: hidden;
   gap: ${(props) => props.theme.spacing.md};
   /* Crítico: sin esto, CharacterList hereda el align-items: stretch por
      defecto de Section (flex-direction: column) y se estira para

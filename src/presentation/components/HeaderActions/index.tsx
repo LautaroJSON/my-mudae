@@ -1,18 +1,26 @@
-import ShareHaremButton from '../ShareHaremButton'
-import { ActionsRow } from './styles'
+import { useProfiles } from "../../context/ProfilesContext";
+import ShareHaremButton from "../ShareHaremButton";
+import UpdateHaremButton from "../UpdateHaremButton";
+import { ActionsRow } from "./styles";
 
 /**
  * Lista horizontal de iconos redondos de acciones rápidas en la esquina
- * superior derecha (FR-001 de 004). En esta iteración monta un único
- * icono ("Compartir harem"); queda preparada para sumar más en futuras
+ * superior derecha (FR-001 de 004). Monta "Compartir harem" (004) y
+ * "Actualizar harem" (005); queda preparada para sumar más en futuras
  * features del mismo conjunto sin volver a tocar `Header`.
  */
 const HeaderActions = () => {
+  const { activeProfile } = useProfiles();
   return (
     <ActionsRow>
-      <ShareHaremButton />
+      {activeProfile && (
+        <>
+          <ShareHaremButton />
+          <UpdateHaremButton />
+        </>
+      )}
     </ActionsRow>
-  )
-}
+  );
+};
 
-export default HeaderActions
+export default HeaderActions;

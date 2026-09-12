@@ -68,4 +68,16 @@ describe('Header', () => {
 
     expect(screen.getByRole('button', { name: /compartir harem/i })).toBeDisabled()
   })
+
+  it('con perfil activo, incluso con harem vacío, el icono "Actualizar harem" está habilitado', () => {
+    renderHeader(new InMemoryProfileRepository([buildProfile()]))
+
+    expect(screen.getByRole('button', { name: /actualizar harem/i })).toBeEnabled()
+  })
+
+  it('sin perfil activo, el icono "Actualizar harem" aparece deshabilitado', () => {
+    renderHeader()
+
+    expect(screen.getByRole('button', { name: /actualizar harem/i })).toBeDisabled()
+  })
 })

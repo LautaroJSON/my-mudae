@@ -15,10 +15,11 @@ interface ICharacterListItem {
  * Envoltorio sortable (`@dnd-kit/sortable`) de un personaje dentro de su
  * serie (User Story 2): el `ref`/transform del arrastre viven acá, igual
  * que `ProfileListItem`. A diferencia de ese componente, no hay manija
- * dedicada — `CharacterCard` no tiene ningún control interactivo propio
- * (sin `onClick`, sin botones), así que toda la tarjeta puede ser la
- * superficie de arrastre sin ambigüedad ni conflicto con otra
- * interacción.
+ * dedicada — toda la tarjeta es la superficie de arrastre; el único
+ * control interactivo propio de `CharacterCard` (`CopyNameButton`, 006)
+ * detiene la propagación de su `pointerdown` para no interferir con
+ * este gesto (ver `research.md` de 006), así que la ambigüedad sigue
+ * resuelta sin necesitar una manija separada.
  *
  * Usa `CSS.Translate` (solo `translate3d`) en vez de `CSS.Transform`
  * (que suma `scaleX`/`scaleY`): `CharacterList` usa `rectSortingStrategy`
@@ -26,13 +27,19 @@ interface ICharacterListItem {
  * durante el arrastre — la escala de compensación de `CSS.Transform`
  * puede deformar visualmente la tarjeta en ese escenario (mismo
  * problema, y misma solución, que `SeriesGroupItem`).
+ *
+ * Mientras se arrastra (`isDragging`), la tarjeta se muestra con
+ * opacidad reducida como feedback visual de que "se levantó" de su
+ * posición (mismo criterio que suelen usar las listas ordenables de
+ * `@dnd-kit`).
  */
 const CharacterListItem = ({ character, staggerIndex }: ICharacterListItem) => {
-  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: character.id })
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: character.id })
 
   const style: CSSProperties = {
     transform: CSS.Translate.toString(transform),
     transition: transition ?? undefined,
+    opacity: isDragging ? 0.5 : undefined,
   }
 
   return (

@@ -154,3 +154,9 @@ futuras del mismo conjunto, fuera de alcance acá).
   (T005-T011)
 - Detenerse en el checkpoint de la Phase 3 para validar la historia de
   forma independiente antes de pasar a Polish
+
+---
+
+## Addendum (post-implementación, sesión posterior): feedback de "copiado" en el propio icono, sin `Toast`
+
+- [X] T016 Reemplazar el `Toast` de `ShareHaremButton` por feedback en el propio icono (relleno `theme.colors.accent`/`theme.colors.danger` + icono `Check`/`X` de `lucide-react` en vez de `Copy`, por 2500ms) — pedido explícito del usuario ("se eliminan los mensajes toast... el icono se vuelve de color naranja y un check negro en su interior"), ver Addendum de `research.md`. Se agregó el token `theme.colors.onAccent` (`src/shared/theme.ts`) para el color del icono sobre el relleno de acento/danger. Se actualizaron los tests de `tests/component/presentation/ShareHaremButton.test.tsx` que buscaban el texto del `Toast` para en cambio verificar el `aria-label` del botón (`/harem copiado/i`) mientras dura el feedback. `Toast` en sí no se modificó ni se eliminó — sigue en uso por `UpdateHaremButton` (`005`), que no es un icono de "copiar" y quedó fuera de este pedido.

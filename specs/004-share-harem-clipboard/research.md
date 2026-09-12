@@ -211,3 +211,52 @@ de esta feature; no se reabre ninguna decisión previa.
 
 **Resultado**: no quedan `NEEDS CLARIFICATION` pendientes en el
 Technical Context del plan.
+
+## Addendum (post-implementación, pedido en una sesión posterior): feedback de "copiado" en el propio icono, sin `Toast`
+
+Pedido del usuario: "se eliminan los mensajes toast como feedback al
+usuario, ahora cuando se presione en un icono de copiar, el icono se
+vuelve de color naranja y un check negro en su interior por unos
+segundos." Aplica a los iconos que representan una acción de **copiar**
+(`ShareHaremButton` acá, y `CopyNameButton` de `006`) — no a
+`UpdateHaremButton` (`005`), que no copia nada al portapapeles y sigue
+usando `Toast` sin cambios.
+
+- **Decision**: `ShareHaremButton` deja de montar `<Toast>`. En su lugar,
+  mantiene un estado local `feedback: 'idle' | 'success' | 'error'`; al
+  copiar con éxito (o al confirmar `ManualCopyDialog`) pasa a `success`
+  por `2500ms` (mismo valor que usaba `Toast` por defecto) y de vuelta a
+  `idle`; mientras tanto, el propio `RoundIconButton` cambia su relleno a
+  `theme.colors.accent` (naranja) y reemplaza el icono `Copy` por `Check`
+  (`lucide-react`), con `theme.colors.onAccent` como color del icono. La
+  falla de generación de texto (`formatHaremMessage` lanzando, camino
+  prácticamente inalcanzable) usa el mismo mecanismo con `feedback:
+  'error'` → relleno `theme.colors.danger` + icono `X`, en vez de
+  desaparecer en silencio (Principio VI). El `aria-label` del botón
+  también cambia mientras `feedback !== 'idle'` (p. ej. "Harem copiado")
+  para no perder el equivalente accesible que daba `Toast` con
+  `role="status"`.
+- **Nuevo token**: `theme.colors.onAccent = '#1C1917'`. No hay ningún
+  color "oscuro fijo" ya existente en la paleta que no cambie entre
+  claro/oscuro (todos los demás tokens son variables CSS que sí cambian),
+  y el pedido explícito era un check **negro** sobre el relleno naranja
+  en cualquier tema — se reutiliza el mismo tono ya usado como el más
+  oscuro de la paleta (`lightColors.textPrimary`/`darkColors.background`,
+  ambos `#1C1917`) en vez de negro puro, respetando la regla ya
+  documentada en `theme.ts` ("nunca negro puro").
+- **Rationale**: cumple el pedido literal del usuario reutilizando el
+  mismo mecanismo de estado que ya existía (antes controlaba qué
+  `Toast` mostrar, ahora controla el relleno/icono del propio botón),
+  sin agregar ningún componente nuevo ni cambiar el flujo de
+  `copyToClipboard`/`ManualCopyDialog`.
+- **Alternatives considered**: reutilizar `theme.colors.textPrimary`
+  directamente en vez de un token nuevo — se descarta porque en modo
+  oscuro `textPrimary` es casi blanco (`#FAFAF9`), lo opuesto de lo que
+  pidió el usuario; witness de esto es que el pedido especifica
+  "negro" sin condicionarlo al tema.
+- **Impacto en artefactos ya escritos**: `contracts/share-harem-ui.md`
+  queda desactualizado en su descripción de "muestra `Toast` de éxito" —
+  ahora es "el propio icono muestra el feedback"; no se reescribe acá
+  porque el comportamiento observable relevante (éxito/error
+  distinguibles, fallback manual sin cambios) sigue vigente, solo cambió
+  el mecanismo de presentación.

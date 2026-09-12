@@ -153,6 +153,13 @@ const colors = {
   overlay: "var(--mm-color-overlay)",
   shadowSm: "var(--mm-shadow-sm)",
   shadowLg: "var(--mm-shadow-lg)",
+  // Fijo (no cambia entre claro/oscuro, a diferencia del resto de esta
+  // paleta): contenido oscuro sobre un fill de `accent`, para el
+  // feedback de "copiado" de los iconos de copiar (icono que pasa a
+  // fill naranja con un check encima). Mismo tono ya usado como el más
+  // oscuro de la paleta (`lightColors.textPrimary`/`darkColors.background`)
+  // en vez de negro puro, que el resto de la app evita a propósito.
+  onAccent: "#1C1917",
 } as const;
 
 export const theme = {

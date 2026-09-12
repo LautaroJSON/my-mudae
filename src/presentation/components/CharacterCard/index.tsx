@@ -1,5 +1,6 @@
 import { memo, type CSSProperties } from "react";
 import type { Character } from "../../../domain/harem/Character";
+import CopyNameButton from "../CopyNameButton";
 import { Body, Card, Image, ImageContainer, Meta, Name } from "./styles";
 
 interface ICharacterCard {
@@ -13,6 +14,7 @@ interface ICharacterCard {
 const CharacterCard = ({ character, staggerIndex = 0 }: ICharacterCard) => {
   return (
     <Card style={{ "--mm-stagger-index": staggerIndex } as CSSProperties}>
+      <CopyNameButton characterName={character.name} />
       <ImageContainer>
         <Image
           src={character.imageUrl}
