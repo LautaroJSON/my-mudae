@@ -19,10 +19,11 @@ function buildSeries(name = 'Amagami'): Series {
 function renderSeriesGroup(series: Series) {
   const profile: Profile = {
     id: 'profile-1',
+    serverId: 'server-1',
+    username: 'profile-1',
     alias: 'profile-1',
     isActive: true,
     createdAt: '2026-01-01T00:00:00.000Z',
-    order: 0,
     harem: { profileId: 'profile-1', series: [series] },
   }
   const repository = new InMemoryProfileRepository([profile])

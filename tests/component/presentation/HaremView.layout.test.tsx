@@ -25,7 +25,7 @@ function buildHarem(): Harem {
 }
 
 function renderHaremView(harem: Harem) {
-  const profile: Profile = { id: harem.profileId, alias: harem.profileId, isActive: true, createdAt: '2026-01-01T00:00:00.000Z', order: 0, harem }
+  const profile: Profile = { id: harem.profileId, serverId: 'server-1', username: harem.profileId, alias: harem.profileId, isActive: true, createdAt: '2026-01-01T00:00:00.000Z', harem }
   const repository = new InMemoryProfileRepository([profile])
   return renderWithTheme(
     <ProfilesProvider repository={repository}>

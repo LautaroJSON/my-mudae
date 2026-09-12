@@ -1,10 +1,32 @@
 import styled from 'styled-components'
 
+// Mismo patrón que ProfilesModal/styles.tsx: Modal solo usa `ariaLabel`
+// para accesibilidad (atributo `aria-label`, sin renderizar nada visible)
+// -- el título visible lo aporta cada modal en su propio contenido.
+export const Title = styled.h2`
+  margin: 0;
+  font-family: ${(props) => props.theme.typography.fontDisplay};
+  font-size: ${(props) => props.theme.typography.size.lg};
+  font-weight: ${(props) => props.theme.typography.weight.semibold};
+  color: ${(props) => props.theme.colors.textPrimary};
+`
+
 export const Message = styled.p`
   margin: 0;
   font-size: ${(props) => props.theme.typography.size.base};
   line-height: ${(props) => props.theme.typography.lineHeight.base};
   color: ${(props) => props.theme.colors.textSecondary};
+
+  // Mismo tratamiento que AdviceItem en PasteHaremScreen/styles.tsx para
+  // referencias a comandos de Discord (ej. $mmaikrs).
+  code {
+    font-family: ${(props) => props.theme.typography.fontMono};
+    font-size: ${(props) => props.theme.typography.size.sm};
+    color: ${(props) => props.theme.colors.textPrimary};
+    background: ${(props) => props.theme.colors.surface};
+    padding: 0 0.25em;
+    border-radius: ${(props) => props.theme.radii.sm};
+  }
 `
 
 // Mismo mecanismo visual/UX que PasteZone de PasteHaremScreen (001):

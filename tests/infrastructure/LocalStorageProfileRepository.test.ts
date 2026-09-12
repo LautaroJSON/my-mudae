@@ -4,11 +4,12 @@ import type { Profile } from '../../src/domain/profile/Profile'
 
 function buildProfile(overrides: Partial<Profile> = {}): Profile {
   return {
-    id: 'rodoifin',
+    id: 'profile-uuid-1',
+    serverId: 'server-uuid-1',
+    username: 'rodoifin',
     alias: 'rodoifin',
     isActive: true,
     createdAt: '2026-09-11T00:00:00.000Z',
-    order: 0,
     harem: {
       profileId: 'rodoifin',
       series: [

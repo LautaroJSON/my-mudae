@@ -9,11 +9,16 @@ export type UpdateActiveProfileHaremResult =
   | { ok: false; reason: 'NO_ACTIVE_PROFILE' }
 
 /**
- * Caso de uso de la User Story 1 (005): sobrescribe el harem del perfil
- * activo con un nuevo pegado, siempre que el nombre de perfil extraído
- * coincida exactamente con `activeProfileId` (comparación por `id`, no
- * por `alias` — ver research.md). A diferencia de
- * `createProfileFromPaste`, nunca crea un perfil nuevo ni sincroniza
+ * Caso de uso de la User Story 1 (005), modificado en 008: sobrescribe
+ * el harem del perfil activo con un nuevo pegado, siempre que el nombre
+ * de usuario extraído coincida con `target.username` (comparación por
+ * `username`, no por `id` — desde 008, `id` es un UUID interno sin
+ * relación con el nombre de usuario; ver research.md de 008). No hace
+ * falta comparar también el servidor: `target.serverId` es fijo desde
+ * la creación y nunca proviene del texto pegado, así que comparar
+ * contra `target.username` ya captura "¿es la misma cuenta de Mudae que
+ * este perfil, en el servidor que ya tenía fijado?". A diferencia de
+ * `createProfileWithServer`, nunca crea un perfil nuevo ni sincroniza
  * ningún perfil distinto del indicado: cualquier discordancia de
  * nombre (con el activo o con cualquier otro perfil existente) bloquea
  * la operación sin persistir nada (contracts/update-active-profile-harem.md).
@@ -29,15 +34,15 @@ export function updateActiveProfileHarem(
     return { ok: false, reason: parsed.reason }
   }
 
-  if (parsed.profileName !== activeProfileId) {
-    return { ok: false, reason: 'PROFILE_MISMATCH', pastedProfileName: parsed.profileName }
-  }
-
   const profiles = repository.getAll()
   const target = profiles.find((profile) => profile.id === activeProfileId)
 
   if (!target) {
     return { ok: false, reason: 'NO_ACTIVE_PROFILE' }
+  }
+
+  if (parsed.profileName !== target.username) {
+    return { ok: false, reason: 'PROFILE_MISMATCH', pastedProfileName: parsed.profileName }
   }
 
   const syncedHarem = syncHarem(target.harem, parsed.series)

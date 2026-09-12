@@ -6,13 +6,14 @@ import { InMemoryProfileRepository } from '../../support/InMemoryProfileReposito
 import { renderWithTheme } from '../../support/renderWithTheme'
 import type { Profile } from '../../../src/domain/profile/Profile'
 
-function buildProfile(id: string, isActive: boolean, order: number): Profile {
+function buildProfile(id: string, isActive: boolean): Profile {
   return {
     id,
+    serverId: 'server-1',
+    username: id,
     alias: id,
     isActive,
     createdAt: '2026-01-01T00:00:00.000Z',
-    order,
     harem: { profileId: id, series: [] },
   }
 }
@@ -43,7 +44,7 @@ describe('Resolución del parámetro `id` de la URL al cargar (User Story 5 de 0
   })
 
   it('sin `id` en la URL, usa el perfil activo persistido tal cual (urlProfileStatus: "none")', () => {
-    const repository = new InMemoryProfileRepository([buildProfile('a', true, 0), buildProfile('b', false, 1)])
+    const repository = new InMemoryProfileRepository([buildProfile('a', true), buildProfile('b', false)])
     renderWithTheme(
       <ProfilesProvider repository={repository}>
         <Probe />
@@ -56,7 +57,7 @@ describe('Resolución del parámetro `id` de la URL al cargar (User Story 5 de 0
 
   it('con un `id` que coincide con un perfil, lo activa (sobrescribe el que estaba activo) y persiste el cambio', () => {
     setUrlSearch('?id=b')
-    const repository = new InMemoryProfileRepository([buildProfile('a', true, 0), buildProfile('b', false, 1)])
+    const repository = new InMemoryProfileRepository([buildProfile('a', true), buildProfile('b', false)])
 
     renderWithTheme(
       <ProfilesProvider repository={repository}>
@@ -74,7 +75,7 @@ describe('Resolución del parámetro `id` de la URL al cargar (User Story 5 de 0
 
   it('con un `id` que no corresponde a ningún perfil, NO toca el activo persistido y expone "not-found"', () => {
     setUrlSearch('?id=fantasma')
-    const repository = new InMemoryProfileRepository([buildProfile('a', true, 0)])
+    const repository = new InMemoryProfileRepository([buildProfile('a', true)])
 
     renderWithTheme(
       <ProfilesProvider repository={repository}>

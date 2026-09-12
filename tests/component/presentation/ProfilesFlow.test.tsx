@@ -21,10 +21,12 @@ async function closeModal(user: ReturnType<typeof userEvent.setup>) {
   await user.keyboard('{Escape}')
 }
 
-async function pasteHarem(user: ReturnType<typeof userEvent.setup>, text: string) {
+async function pasteHarem(user: ReturnType<typeof userEvent.setup>, text: string, serverName: string) {
   const textarea = screen.getByRole('textbox')
   await user.click(textarea)
   await user.paste(text)
+  await user.type(screen.getByLabelText('Servidor nuevo'), serverName)
+  await user.click(screen.getByRole('button', { name: /^confirmar$/i }))
 }
 
 describe('Flujo integrado de perfiles (header + modal)', () => {
@@ -32,26 +34,31 @@ describe('Flujo integrado de perfiles (header + modal)', () => {
     window.localStorage.clear()
   })
 
-  it('pegar el primer harem crea y activa el perfil; pegar un segundo lo reemplaza como activo; cambiar de activo; eliminar el activo reactiva el otro; eliminar el último vuelve a la pantalla de pegado', async () => {
+  it('pegar el primer harem crea y activa el perfil (asociado a un servidor); pegar un segundo lo reemplaza como activo; cambiar de activo; eliminar el activo reactiva el otro; eliminar el último vuelve a la pantalla de pegado', async () => {
     const user = userEvent.setup()
     render(<App />)
 
     // 0 perfiles → header invita a crear uno
     expect(screen.getByRole('button', { name: /abrir perfiles/i })).toHaveTextContent(/crear perfil/i)
 
-    // Abrir el modal y pegar el primer harem — pegar con éxito cierra el
-    // modal solo, no hace falta cerrarlo a mano
+    // Abrir el modal y pegar el primer harem, indicando un servidor nuevo
+    // — pegar+confirmar con éxito cierra el modal solo
     await openProfilesModal(user)
-    await pasteHarem(user, HAREM_A)
+    await pasteHarem(user, HAREM_A, 'Server A')
 
     expect(within(screen.getByRole('button', { name: /abrir perfiles/i })).getByText('rodoifin')).toBeInTheDocument()
     expect(screen.getByText('Haruka Morishima')).toBeInTheDocument()
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
 
-    // Agregar un segundo perfil desde "nuevo perfil" dentro del modal
+    // Agregar un segundo perfil desde "nuevo perfil" dentro del modal,
+    // reutilizando el mismo servidor ya creado (radio button)
     await openProfilesModal(user)
     await user.click(screen.getByRole('button', { name: /nuevo perfil/i }))
-    await pasteHarem(user, HAREM_B)
+    const textarea = screen.getByRole('textbox')
+    await user.click(textarea)
+    await user.paste(HAREM_B)
+    await user.click(screen.getByRole('radio', { name: 'Server A' }))
+    await user.click(screen.getByRole('button', { name: /^confirmar$/i }))
 
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     expect(
@@ -60,8 +67,10 @@ describe('Flujo integrado de perfiles (header + modal)', () => {
     expect(await screen.findByText('Noelle Silva')).toBeInTheDocument()
     expect(screen.queryByText('Haruka Morishima')).not.toBeInTheDocument()
 
-    // Volver a activar rodoifin manualmente desde la lista del modal
+    // Volver a activar rodoifin manualmente desde la lista del modal,
+    // agrupada por servidor
     await openProfilesModal(user)
+    await user.click(screen.getByText('Server A'))
     const list = screen.getByLabelText('Lista de perfiles')
     await user.click(within(list).getByRole('button', { name: 'rodoifin' }))
     await closeModal(user)
@@ -72,6 +81,7 @@ describe('Flujo integrado de perfiles (header + modal)', () => {
     // Eliminar el perfil activo (rodoifin) reactiva el otro (otroUsuario);
     // la eliminación pide confirmación primero (irreversible)
     await openProfilesModal(user)
+    await user.click(screen.getByText('Server A'))
     await user.click(screen.getByRole('button', { name: 'Eliminar perfil rodoifin' }))
     await user.click(screen.getByRole('button', { name: /^eliminar$/i }))
     await closeModal(user)
@@ -81,6 +91,7 @@ describe('Flujo integrado de perfiles (header + modal)', () => {
     // Eliminar el único perfil restante vuelve a mostrar la zona de
     // pegado, ahora dentro del modal (ya no hay perfiles)
     await openProfilesModal(user)
+    await user.click(screen.getByText('Server A'))
     await user.click(screen.getByRole('button', { name: /eliminar perfil otrousuario/i }))
     await user.click(screen.getByRole('button', { name: /^eliminar$/i }))
 

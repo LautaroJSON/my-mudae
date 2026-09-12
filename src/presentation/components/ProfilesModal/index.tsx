@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { ArrowLeft, UserPlus } from 'lucide-react'
 import { useProfiles } from '../../context/ProfilesContext'
 import Modal from '../Modal'
-import ProfileList from '../ProfileList'
+import ServerList from '../ServerList'
 import PasteHaremScreen from '../PasteHaremScreen'
 import { theme } from '../../../shared/theme'
 import { BackButton, HeaderRow, NewProfileButton, Title, ViewContainer } from './styles'
@@ -46,7 +46,7 @@ const ProfilesModal = ({ onClose }: IProfilesModal) => {
           <PasteHaremScreen onCreated={onClose} />
         ) : (
           <>
-            <ProfileList />
+            <ServerList />
             <NewProfileButton type="button" onClick={() => setIsAddingProfile(true)}>
               <UserPlus size={16} />
               Nuevo perfil

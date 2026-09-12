@@ -17,10 +17,11 @@ const mockedCopyTextToClipboard = vi.mocked(copyTextToClipboard)
 function buildProfile(overrides: Partial<Profile> = {}): Profile {
   return {
     id: 'rodoifin',
+    serverId: 'server-1',
+    username: 'rodoifin',
     alias: 'rodoifin',
     isActive: true,
     createdAt: '2026-01-01T00:00:00.000Z',
-    order: 0,
     harem: {
       profileId: 'rodoifin',
       series: [

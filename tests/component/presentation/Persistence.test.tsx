@@ -20,6 +20,8 @@ describe('Persistencia automática (Principio I de la constitución)', () => {
     await user.click(screen.getByRole('button', { name: /abrir perfiles/i }))
     await user.click(screen.getByRole('textbox'))
     await user.paste(HAREM)
+    await user.type(screen.getByLabelText('Servidor nuevo'), 'Mi servidor')
+    await user.click(screen.getByRole('button', { name: /^confirmar$/i }))
     expect(await screen.findByText('Haruka Morishima')).toBeInTheDocument()
     await user.keyboard('{Escape}')
 

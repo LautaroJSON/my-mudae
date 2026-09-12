@@ -5,11 +5,12 @@ import type { Profile } from '../../../src/domain/profile/Profile'
 
 function buildProfile(overrides: Partial<Profile> = {}): Profile {
   return {
-    id: 'rodoifin',
+    id: 'profile-rodoifin-s1',
+    serverId: 's1',
+    username: 'rodoifin',
     alias: 'rodoifin',
     isActive: true,
     createdAt: '2026-01-01T00:00:00.000Z',
-    order: 0,
     harem: {
       profileId: 'rodoifin',
       series: [
@@ -41,10 +42,10 @@ Amagami - 1/11
 describe('updateActiveProfileHarem', () => {
   it('sobrescribe el harem del perfil activo cuando el nombre pegado coincide, sin tocar otros perfiles', () => {
     const activo = buildProfile()
-    const otro = buildProfile({ id: 'otrousuario', alias: 'otrousuario', isActive: false })
+    const otro = buildProfile({ id: 'profile-otrousuario-s1', serverId: 's1', username: 'otrousuario', alias: 'otrousuario', isActive: false })
     const repository = new InMemoryProfileRepository([activo, otro])
 
-    const result = updateActiveProfileHarem(repository, 'rodoifin', UPDATED_HAREM)
+    const result = updateActiveProfileHarem(repository, activo.id, UPDATED_HAREM)
 
     expect(result).toEqual({ ok: true })
 
@@ -59,10 +60,10 @@ describe('updateActiveProfileHarem', () => {
 
   it('bloquea la actualización cuando el nombre pegado coincide con OTRO perfil existente, sin modificar ningún perfil', () => {
     const activo = buildProfile()
-    const otro = buildProfile({ id: 'otrousuario', alias: 'otrousuario', isActive: false })
+    const otro = buildProfile({ id: 'profile-otrousuario-s1', serverId: 's1', username: 'otrousuario', alias: 'otrousuario', isActive: false })
     const repository = new InMemoryProfileRepository([activo, otro])
 
-    const result = updateActiveProfileHarem(repository, 'rodoifin', OTHER_USER_HAREM)
+    const result = updateActiveProfileHarem(repository, activo.id, OTHER_USER_HAREM)
 
     expect(result).toEqual({ ok: false, reason: 'PROFILE_MISMATCH', pastedProfileName: 'otrousuario' })
     expect(repository.getAll()).toEqual([activo, otro])
@@ -72,7 +73,7 @@ describe('updateActiveProfileHarem', () => {
     const activo = buildProfile()
     const repository = new InMemoryProfileRepository([activo])
 
-    const result = updateActiveProfileHarem(repository, 'rodoifin', OTHER_USER_HAREM)
+    const result = updateActiveProfileHarem(repository, activo.id, OTHER_USER_HAREM)
 
     expect(result).toEqual({ ok: false, reason: 'PROFILE_MISMATCH', pastedProfileName: 'otrousuario' })
     expect(repository.getAll()).toEqual([activo])
@@ -82,7 +83,7 @@ describe('updateActiveProfileHarem', () => {
     const activo = buildProfile()
     const repository = new InMemoryProfileRepository([activo])
 
-    const result = updateActiveProfileHarem(repository, 'rodoifin', 'esto no es un harem de Mudae')
+    const result = updateActiveProfileHarem(repository, activo.id, 'esto no es un harem de Mudae')
 
     expect(result).toEqual({ ok: false, reason: 'NO_VALID_SERIES_OR_CHARACTER' })
     expect(repository.getAll()).toEqual([activo])
@@ -91,9 +92,23 @@ describe('updateActiveProfileHarem', () => {
   it('devuelve NO_ACTIVE_PROFILE cuando el id indicado no corresponde a ningún perfil', () => {
     const repository = new InMemoryProfileRepository([])
 
-    const result = updateActiveProfileHarem(repository, 'rodoifin', UPDATED_HAREM)
+    const result = updateActiveProfileHarem(repository, 'no-existe', UPDATED_HAREM)
 
     expect(result).toEqual({ ok: false, reason: 'NO_ACTIVE_PROFILE' })
     expect(repository.getAll()).toEqual([])
+  })
+
+  it('dos perfiles con el mismo username en servidores distintos: actualizar el activo sincroniza el correcto sin afectar al otro servidor', () => {
+    const activoEnS1 = buildProfile({ id: 'profile-rodoifin-s1', serverId: 's1', username: 'rodoifin', isActive: true })
+    const inactivoEnS2 = buildProfile({ id: 'profile-rodoifin-s2', serverId: 's2', username: 'rodoifin', isActive: false })
+    const repository = new InMemoryProfileRepository([activoEnS1, inactivoEnS2])
+
+    const result = updateActiveProfileHarem(repository, activoEnS1.id, UPDATED_HAREM)
+
+    expect(result).toEqual({ ok: true })
+    const [updated, untouched] = repository.getAll()
+    expect(updated.id).toBe('profile-rodoifin-s1')
+    expect(updated.harem.series[0].characters.map((c) => c.name)).toEqual(['Haruka Morishima', 'Nuevo Personaje'])
+    expect(untouched).toEqual(inactivoEnS2)
   })
 })

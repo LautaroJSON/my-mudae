@@ -6,10 +6,11 @@ import type { Profile } from '../../../src/domain/profile/Profile'
 function buildProfile(id: string): Profile {
   return {
     id,
+    serverId: 'server-1',
+    username: id,
     alias: 'Perfil original',
     isActive: true,
     createdAt: '2026-01-01T00:00:00.000Z',
-    order: 0,
     harem: { profileId: id, series: [] },
   }
 }

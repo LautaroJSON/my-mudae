@@ -1,21 +1,29 @@
 import { closestCenter, DndContext, KeyboardSensor, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core'
 import { SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable'
+import type { Profile } from '../../../domain/profile/Profile'
 import { useProfiles } from '../../context/ProfilesContext'
 import { computeReorderedIds } from '../../computeReorderedIds'
 import { buildProfileUrl } from '../../urlParams'
 import ProfileListItem from '../ProfileListItem'
 import { EmptyMessage, List } from './styles'
 
+interface IProfileList {
+  /** Perfiles de UN servidor, ya en el orden de `Server.profileIds` (008). */
+  profiles: Profile[]
+  serverId: string
+}
+
 /**
- * Lista de perfiles dentro de `ProfilesModal` (FR-003, FR-004): permite
- * activar (FR-006), renombrar y eliminar cada perfil, y reordenarlos con
- * drag-and-drop (User Story 2, FR-008/009) — el `KeyboardSensor` hace que
- * el reordenamiento también funcione por teclado (Tab a la manija,
- * Espacio para levantar, flechas para mover, Espacio para soltar), no
- * solo con mouse/touch.
+ * Lista de perfiles de un servidor, dentro de `ServerListItem` (008: antes
+ * de esta feature vivía directamente dentro de `ProfilesModal` como lista
+ * plana de TODOS los perfiles — FR-003/FR-004 de 002). Permite activar
+ * (FR-006), renombrar, eliminar cada perfil, y reordenarlos con
+ * drag-and-drop dentro de ESE servidor (User Story 4, FR-011) — el
+ * `KeyboardSensor` hace que el reordenamiento también funcione por
+ * teclado, no solo con mouse/touch.
  */
-const ProfileList = () => {
-  const { profiles, activateProfile, deleteProfile, renameProfile, reorderProfiles } = useProfiles()
+const ProfileList = ({ profiles, serverId }: IProfileList) => {
+  const { activateProfile, deleteProfile, renameProfile, reorderProfilesInServer } = useProfiles()
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
@@ -32,7 +40,7 @@ const ProfileList = () => {
     if (!over) {
       return
     }
-    reorderProfiles(computeReorderedIds(ids, String(active.id), String(over.id)))
+    reorderProfilesInServer(serverId, computeReorderedIds(ids, String(active.id), String(over.id)))
   }
 
   const handleOpenInNewTab = (profileId: string) => {

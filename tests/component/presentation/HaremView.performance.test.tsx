@@ -35,10 +35,11 @@ describe('HaremView - escala con harems grandes (Principio III)', () => {
     const harem = buildLargeHarem(30, 7) // 210 personajes
     const profile: Profile = {
       id: harem.profileId,
+      serverId: 'server-1',
+      username: harem.profileId,
       alias: harem.profileId,
       isActive: true,
       createdAt: '2026-01-01T00:00:00.000Z',
-      order: 0,
       harem,
     }
     const repository = new InMemoryProfileRepository([profile])
