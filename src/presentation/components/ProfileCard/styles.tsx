@@ -84,8 +84,7 @@ export const NameInput = styled.input`
   width: 100%;
   box-sizing: border-box;
   font-size: ${(props) => props.theme.typography.size.md};
-  padding: ${(props) => props.theme.spacing.xxs}
-    ${(props) => props.theme.spacing.sm};
+  padding: ${(props) => props.theme.spacing.xxs};
   border: 1px solid ${(props) => props.theme.colors.border};
   border-radius: ${(props) => props.theme.radii.sm};
   background: ${(props) => props.theme.colors.surface};

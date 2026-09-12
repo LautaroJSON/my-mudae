@@ -78,7 +78,7 @@ export const CharacterList = styled.div<{ $widthCant?: number }>`
   overflow-x: auto;
   overflow-y: hidden;
 
-  height: 325px;
+  /* height: 310px; */
 
   width: ${(props) =>
     props.$widthCant ? (props.$widthCant === 1 ? "144px" : "100%") : "100%"};

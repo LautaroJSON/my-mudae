@@ -104,7 +104,7 @@ export const Meta = styled.span`
 export const Kakera = styled.span`
   font-size: ${(props) => props.theme.typography.size.xs};
   font-family: ${(props) => props.theme.typography.fontMono};
-  color: ${(props) => props.theme.colors.accent};
+  color: ${(props) => props.theme.colors.a};
 `;
 
 export const ImageContainer = styled.div`

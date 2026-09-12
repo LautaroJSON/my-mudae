@@ -50,6 +50,36 @@ const GlobalStyle = createGlobalStyle`
     background: var(--mm-color-background);
   }
 
+  /* Scrollbar angosto y fino en toda la app (Firefox + navegadores
+     basados en WebKit/Blink): track del mismo tono que el fondo, thumb
+     ("pill") con el color de acento -- mismo lenguaje visual que el
+     resto de la UI, en vez de la scrollbar por defecto del sistema. Se
+     aplica con el selector universal a propósito: cubre también los
+     overflow internos (ej. CharacterList, Modal, ManualCopyDialog), no
+     solo el scroll de la página. */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--mm-color-accent) var(--mm-color-background);
+  }
+
+  *::-webkit-scrollbar {
+    width: ${(props) => props.theme.spacing.sm};
+    height: ${(props) => props.theme.spacing.sm};
+  }
+
+  *::-webkit-scrollbar-track {
+    background: var(--mm-color-background);
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background: var(--mm-color-accent);
+    border-radius: ${(props) => props.theme.radii.pill};
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background: var(--mm-color-accent-hover);
+  }
+
   @media (prefers-reduced-motion: reduce) {
     *,
     *::before,
