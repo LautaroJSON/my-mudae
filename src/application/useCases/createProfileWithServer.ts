@@ -1,6 +1,7 @@
 import { activateOnlyProfile, deactivateAllProfiles } from '../../domain/profile/Profile'
 import { syncHarem } from '../../domain/harem/syncHarem'
 import { addProfileToServer } from '../../domain/server/Server'
+import { isSameUsername } from '../../domain/profile/username'
 import type { ParsedSeries } from '../../domain/parsing/parseHaremMessage'
 import type { Profile } from '../../domain/profile/Profile'
 import type { Server } from '../../domain/server/Server'
@@ -50,8 +51,12 @@ export function createProfileWithServer(
   }
 
   const existingProfiles = profileRepository.getAll()
+  // La comparación de nombre es tolerante (mismo criterio que
+  // `updateActiveProfileHarem`): casing o caracteres invisibles del
+  // copiado de Discord no deben crear un perfil duplicado en el mismo
+  // servidor en vez de sincronizar el que ya existe.
   const matchingProfile = existingProfiles.find(
-    (profile) => profile.serverId === targetServer.id && profile.username === parsedUsername,
+    (profile) => profile.serverId === targetServer.id && isSameUsername(profile.username, parsedUsername),
   )
 
   if (matchingProfile) {

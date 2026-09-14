@@ -85,8 +85,16 @@ export const MismatchName = styled.strong`
   color: ${(props) => props.theme.colors.danger};
 `
 
-export const RetryButton = styled.button`
+// Fila de acciones de la vista de discordancia: "Actualizar de todas
+// formas" (secundaria, destructiva) + "Reintentar" (primaria).
+export const ButtonRow = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: ${(props) => props.theme.spacing.sm};
   align-self: flex-end;
+`
+
+export const RetryButton = styled.button`
   padding: ${(props) => props.theme.spacing.sm} ${(props) => props.theme.spacing.md};
   border-radius: ${(props) => props.theme.radii.sm};
   border: none;
@@ -98,5 +106,24 @@ export const RetryButton = styled.button`
 
   &:hover {
     background: ${(props) => props.theme.colors.accentHover};
+  }
+`
+
+// Misma métrica que RetryButton pero en variante contorno: es la acción
+// menos habitual (y la única que renombra el perfil), así que no compite
+// visualmente con "Reintentar".
+export const ForceButton = styled.button`
+  padding: ${(props) => props.theme.spacing.sm} ${(props) => props.theme.spacing.md};
+  border-radius: ${(props) => props.theme.radii.sm};
+  border: 1px solid ${(props) => props.theme.colors.border};
+  background: transparent;
+  color: ${(props) => props.theme.colors.textSecondary};
+  font-size: ${(props) => props.theme.typography.size.base};
+  font-weight: ${(props) => props.theme.typography.weight.semibold};
+  cursor: pointer;
+
+  &:hover {
+    border-color: ${(props) => props.theme.colors.accent};
+    color: ${(props) => props.theme.colors.textPrimary};
   }
 `
