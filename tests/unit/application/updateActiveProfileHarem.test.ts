@@ -65,7 +65,12 @@ describe('updateActiveProfileHarem', () => {
 
     const result = updateActiveProfileHarem(repository, activo.id, OTHER_USER_HAREM)
 
-    expect(result).toEqual({ ok: false, reason: 'PROFILE_MISMATCH', pastedProfileName: 'otrousuario' })
+    expect(result).toEqual({
+      ok: false,
+      reason: 'PROFILE_MISMATCH',
+      pastedProfileName: 'otrousuario',
+      profileUsername: 'rodoifin',
+    })
     expect(repository.getAll()).toEqual([activo, otro])
   })
 
@@ -75,7 +80,12 @@ describe('updateActiveProfileHarem', () => {
 
     const result = updateActiveProfileHarem(repository, activo.id, OTHER_USER_HAREM)
 
-    expect(result).toEqual({ ok: false, reason: 'PROFILE_MISMATCH', pastedProfileName: 'otrousuario' })
+    expect(result).toEqual({
+      ok: false,
+      reason: 'PROFILE_MISMATCH',
+      pastedProfileName: 'otrousuario',
+      profileUsername: 'rodoifin',
+    })
     expect(repository.getAll()).toEqual([activo])
   })
 
@@ -96,6 +106,69 @@ describe('updateActiveProfileHarem', () => {
 
     expect(result).toEqual({ ok: false, reason: 'NO_ACTIVE_PROFILE' })
     expect(repository.getAll()).toEqual([])
+  })
+
+  it('acepta el pegado cuando el nombre solo difiere en casing', () => {
+    const activo = buildProfile()
+    const repository = new InMemoryProfileRepository([activo])
+
+    const result = updateActiveProfileHarem(repository, activo.id, UPDATED_HAREM.replace("rodoifin's", "RODOIFIN's"))
+
+    expect(result).toEqual({ ok: true })
+    expect(repository.getAll()[0].harem.series[0].characters.map((c) => c.name)).toEqual([
+      'Haruka Morishima',
+      'Nuevo Personaje',
+    ])
+    // El casing pegado no reescribe el username guardado.
+    expect(repository.getAll()[0].username).toBe('rodoifin')
+  })
+
+  it('acepta el pegado cuando el nombre trae caracteres invisibles del copiado de Discord', () => {
+    const activo = buildProfile()
+    const repository = new InMemoryProfileRepository([activo])
+
+    const result = updateActiveProfileHarem(
+      repository,
+      activo.id,
+      UPDATED_HAREM.replace("rodoifin's", "rodo\u200Bifin\u00AD's"),
+    )
+
+    expect(result).toEqual({ ok: true })
+    expect(repository.getAll()[0].username).toBe('rodoifin')
+  })
+
+  it('con force ignora la discordancia, adopta el nombre pegado como username y deja el alias intacto', () => {
+    const activo = buildProfile({ username: 'nombre-viejo', alias: 'mi perfil' })
+    const otro = buildProfile({ id: 'profile-otrousuario-s1', username: 'otrousuario', alias: 'otrousuario', isActive: false })
+    const repository = new InMemoryProfileRepository([activo, otro])
+
+    const result = updateActiveProfileHarem(repository, activo.id, UPDATED_HAREM, { force: true })
+
+    expect(result).toEqual({ ok: true })
+
+    const [actualizado, intacto] = repository.getAll()
+    expect(actualizado.username).toBe('rodoifin')
+    expect(actualizado.alias).toBe('mi perfil')
+    expect(actualizado.harem.series[0].characters.map((c) => c.name)).toEqual([
+      'Haruka Morishima',
+      'Nuevo Personaje',
+    ])
+    expect(intacto).toEqual(otro)
+  })
+
+  it('sin force, un nombre distinto sigue bloqueando sin persistir nada', () => {
+    const activo = buildProfile({ username: 'nombre-viejo', alias: 'rodoifin' })
+    const repository = new InMemoryProfileRepository([activo])
+
+    const result = updateActiveProfileHarem(repository, activo.id, UPDATED_HAREM)
+
+    expect(result).toEqual({
+      ok: false,
+      reason: 'PROFILE_MISMATCH',
+      pastedProfileName: 'rodoifin',
+      profileUsername: 'nombre-viejo',
+    })
+    expect(repository.getAll()).toEqual([activo])
   })
 
   it('dos perfiles con el mismo username en servidores distintos: actualizar el activo sincroniza el correcto sin afectar al otro servidor', () => {

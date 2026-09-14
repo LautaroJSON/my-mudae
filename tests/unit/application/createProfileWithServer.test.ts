@@ -71,6 +71,28 @@ describe('createProfileWithServer', () => {
     expect(serverRepository.getAll()[0].profileIds).toEqual([firstProfileId])
   })
 
+  it('un pegado con distinto casing o ruido invisible sincroniza el perfil existente en vez de duplicarlo', () => {
+    const serverRepository = new InMemoryServerRepository([{ id: 's1', name: 'Server A', profileIds: [] }])
+    const profileRepository = new InMemoryProfileRepository([])
+
+    createProfileWithServer(profileRepository, serverRepository, 'rodoifin', SERIES, {
+      kind: 'existing-server',
+      serverId: 's1',
+    })
+    const firstProfileId = profileRepository.getAll()[0].id
+
+    const result = createProfileWithServer(profileRepository, serverRepository, 'RODO\u200BIFIN', SERIES, {
+      kind: 'existing-server',
+      serverId: 's1',
+    })
+
+    expect(result).toEqual({ ok: true, mode: 'synced' })
+    expect(profileRepository.getAll()).toHaveLength(1)
+    expect(profileRepository.getAll()[0].id).toBe(firstProfileId)
+    // El username guardado no se reescribe con el casing del pegado nuevo.
+    expect(profileRepository.getAll()[0].username).toBe('rodoifin')
+  })
+
   it('mismo username eligiendo un servidor DISTINTO al que ya lo tiene crea un perfil nuevo e independiente', () => {
     const serverRepository = new InMemoryServerRepository([
       { id: 's1', name: 'Server A', profileIds: [] },

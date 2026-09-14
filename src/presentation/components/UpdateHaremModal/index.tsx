@@ -2,7 +2,9 @@ import { useRef, useState, type ClipboardEvent } from "react";
 import { useProfiles } from "../../context/ProfilesContext";
 import Modal from "../Modal";
 import {
+  ButtonRow,
   ErrorMessage,
+  ForceButton,
   Message,
   MismatchName,
   PasteZone,
@@ -18,7 +20,15 @@ interface IUpdateHaremModal {
 
 type View =
   | { kind: "paste"; formatError?: string }
-  | { kind: "mismatch"; pastedProfileName: string };
+  | {
+      kind: "mismatch";
+      /** Nombre que venía en el encabezado del pegado. */
+      pastedProfileName: string;
+      /** `username` guardado del perfil: lo que realmente se comparó (NO el alias). */
+      profileUsername: string;
+      /** Se conserva para poder reintentar el mismo pegado forzando. */
+      pastedText: string;
+    };
 
 /**
  * Modal de re-pegado para actualizar el harem del perfil activo (FR-002
@@ -27,6 +37,12 @@ type View =
  * `createProfileFromPaste`, ver research.md). Una discordancia de
  * nombre de perfil reemplaza la zona de pegado por una vista de
  * advertencia dentro del mismo modal, nunca un segundo modal apilado.
+ *
+ * Esa vista muestra el `username` guardado (el valor que el caso de uso
+ * compara), nunca el `alias`: mostrar el alias hacía que un perfil
+ * renombrado exhibiera dos nombres idénticos en un mensaje de "no
+ * coinciden". Y ofrece forzar la actualización, la salida para cuando el
+ * nombre en Discord/Mudae cambió de verdad.
  */
 const UpdateHaremModal = ({ onClose, onUpdated }: IUpdateHaremModal) => {
   const { activeProfile, updateActiveProfileHarem } = useProfiles();
@@ -51,6 +67,8 @@ const UpdateHaremModal = ({ onClose, onUpdated }: IUpdateHaremModal) => {
       setView({
         kind: "mismatch",
         pastedProfileName: result.pastedProfileName,
+        profileUsername: result.profileUsername,
+        pastedText,
       });
       return;
     }
@@ -63,18 +81,39 @@ const UpdateHaremModal = ({ onClose, onUpdated }: IUpdateHaremModal) => {
   };
 
   if (view.kind === "mismatch") {
+    const handleForce = () => {
+      const result = updateActiveProfileHarem(view.pastedText, { force: true });
+      if (result.ok) {
+        onUpdated();
+      }
+    };
+
     return (
       <Modal onClose={onClose} ariaLabel="Actualizar harem">
         <Title>Actualizar harem</Title>
         <Message>
           El texto pegado pertenece a{" "}
-          <MismatchName>{view.pastedProfileName}</MismatchName>, que no
-          corresponde al perfil que se está actualizando (
-          <strong>{activeProfile?.alias}</strong>). No se modificó ningún harem.
+          <MismatchName>{view.pastedProfileName}</MismatchName>, pero este
+          perfil se creó con el nombre de Mudae{" "}
+          <strong>{view.profileUsername}</strong>
+          {activeProfile && activeProfile.alias !== view.profileUsername && (
+            <> (lo ves en la app como «{activeProfile.alias}»)</>
+          )}
+          . No se modificó ningún harem.
         </Message>
-        <RetryButton type="button" onClick={() => setView({ kind: "paste" })}>
-          Reintentar
-        </RetryButton>
+        <Message>
+          Si te cambiaste el nombre en Discord, actualizá de todas formas: se
+          sobrescribe el harem de este perfil y pasa a llamarse{" "}
+          <strong>{view.pastedProfileName}</strong>.
+        </Message>
+        <ButtonRow>
+          <ForceButton type="button" onClick={handleForce}>
+            Actualizar de todas formas
+          </ForceButton>
+          <RetryButton type="button" onClick={() => setView({ kind: "paste" })}>
+            Reintentar
+          </RetryButton>
+        </ButtonRow>
       </Modal>
     );
   }

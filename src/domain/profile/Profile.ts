@@ -14,11 +14,15 @@ import type { Harem } from '../harem/Harem'
  * el perfil y nunca cambia (un perfil no se puede "mover" de servidor).
  *
  * `username` (feature 008): nombre extraído del encabezado del pegado
- * (`"<username>'s harem"`), inmutable. Reemplaza el rol que `id` cumplía
- * antes para decidir crear-vs-sincronizar y detectar discordancias al
- * actualizar harem — dos perfiles pueden compartir `username` si
- * pertenecen a servidores distintos, y se tratan como completamente
- * independientes.
+ * (`"<username>'s harem"`). Reemplaza el rol que `id` cumplía antes para
+ * decidir crear-vs-sincronizar y detectar discordancias al actualizar
+ * harem — dos perfiles pueden compartir `username` si pertenecen a
+ * servidores distintos, y se tratan como completamente independientes.
+ * Ya no es inmutable: cambia únicamente cuando el usuario fuerza una
+ * actualización de harem con un nombre distinto (se cambió el nombre en
+ * Discord/Mudae), vía `updateActiveProfileHarem` con `force`. Todas las
+ * comparaciones de `username` pasan por `normalizeUsername` (ver
+ * `username.ts`), nunca por `===` directo.
  *
  * `alias` (feature 002): nombre visible y editable, independiente de
  * `id`/`username`. Igual a `username` al crearse; a partir de ahí se

@@ -73,9 +73,55 @@ describe('UpdateHaremModal (vía UpdateHaremButton)', () => {
     await user.paste(OTHER_USER_HAREM)
 
     expect(screen.getByRole('dialog')).toHaveTextContent('otrousuario')
-    expect(screen.getByRole('dialog')).toHaveTextContent(/no corresponde al perfil/i)
+    expect(screen.getByRole('dialog')).toHaveTextContent(/se creó con el nombre de Mudae/i)
     expect(screen.queryByText(/harem actualizado/i)).not.toBeInTheDocument()
     expect(repository.getAll()).toEqual([activo, otro])
+  })
+
+  it('la advertencia muestra el username guardado, no el alias (perfil renombrado)', async () => {
+    // Caso reportado: el perfil se creó como "rodolfin" y después se renombró a
+    // "rodoifin"; mostrar el alias hacía que el mensaje exhibiera dos nombres
+    // idénticos ("pertenece a rodoifin, que no corresponde a rodoifin").
+    const activo = buildProfile({ username: 'rodolfin', alias: 'rodoifin' })
+    const repository = new InMemoryProfileRepository([activo])
+    const { user } = await openModal(repository)
+
+    await user.click(screen.getByRole('textbox'))
+    await user.paste(UPDATED_HAREM)
+
+    const dialog = screen.getByRole('dialog')
+    expect(dialog).toHaveTextContent('rodolfin')
+    expect(dialog).toHaveTextContent('rodoifin')
+    expect(repository.getAll()).toEqual([activo])
+  })
+
+  it('"Actualizar de todas formas" fuerza la actualización y adopta el nombre pegado como username', async () => {
+    const activo = buildProfile({ username: 'nombre-viejo', alias: 'mi perfil' })
+    const repository = new InMemoryProfileRepository([activo])
+    const { user } = await openModal(repository)
+
+    await user.click(screen.getByRole('textbox'))
+    await user.paste(UPDATED_HAREM)
+    await user.click(screen.getByRole('button', { name: /actualizar de todas formas/i }))
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(await screen.findByText(/harem actualizado/i)).toBeInTheDocument()
+
+    const [actualizado] = repository.getAll()
+    expect(actualizado.username).toBe('rodoifin')
+    expect(actualizado.alias).toBe('mi perfil')
+    expect(actualizado.harem.series[0].characters[0].kakera).toBe(99)
+  })
+
+  it('un pegado con otro casing no se considera una discordancia', async () => {
+    const repository = new InMemoryProfileRepository([buildProfile()])
+    const { user } = await openModal(repository)
+
+    await user.click(screen.getByRole('textbox'))
+    await user.paste(UPDATED_HAREM.replace("rodoifin's harem", "RODOIFIN's harem"))
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(repository.getAll()[0].harem.series[0].characters[0].kakera).toBe(99)
   })
 
   it('"Reintentar" vuelve a mostrar la zona de pegado tras una advertencia', async () => {

@@ -20,12 +20,18 @@ import { reorderCharactersInSeries as reorderCharactersInSeriesUseCase } from '.
 import { reorderSeries as reorderSeriesUseCase } from '../../application/useCases/reorderSeries'
 import {
   updateActiveProfileHarem as updateActiveProfileHaremUseCase,
+  type UpdateActiveProfileHaremOptions,
   type UpdateActiveProfileHaremResult,
 } from '../../application/useCases/updateActiveProfileHarem'
 import type { ParsedSeries } from '../../domain/parsing/parseHaremMessage'
 import { getProfileIdFromUrl } from '../urlParams'
 
-export type { CreateProfileWithServerResult, ServerChoice, UpdateActiveProfileHaremResult }
+export type {
+  CreateProfileWithServerResult,
+  ServerChoice,
+  UpdateActiveProfileHaremOptions,
+  UpdateActiveProfileHaremResult,
+}
 
 export type UrlProfileStatus = 'none' | 'activated' | 'not-found'
 
@@ -82,8 +88,16 @@ export interface IProfilesContext {
   reorderCharactersInSeries: (seriesId: string, orderedCharacterIds: string[]) => void
   /** Reordena las series del harem del perfil activo (User Story 3 de 003). No hace nada si no hay perfil activo. */
   reorderSeries: (orderedSeriesIds: string[]) => void
-  /** Sobrescribe el harem del perfil activo con un nuevo pegado (User Story 1 de 005). Devuelve `NO_ACTIVE_PROFILE` sin llamar al caso de uso si no hay perfil activo. */
-  updateActiveProfileHarem: (rawText: string) => UpdateActiveProfileHaremResult
+  /**
+   * Sobrescribe el harem del perfil activo con un nuevo pegado (User Story 1 de 005).
+   * Devuelve `NO_ACTIVE_PROFILE` sin llamar al caso de uso si no hay perfil activo.
+   * Con `{ force: true }` ignora la discordancia de nombre y adopta el nombre pegado
+   * como `username` del perfil.
+   */
+  updateActiveProfileHarem: (
+    rawText: string,
+    options?: UpdateActiveProfileHaremOptions,
+  ) => UpdateActiveProfileHaremResult
 }
 
 const ProfilesContext = createContext<IProfilesContext | undefined>(undefined)
@@ -163,11 +177,11 @@ const ProfilesProvider = ({ children, repository, serverRepository }: IProfilesP
     syncFromRepositories()
   }
 
-  const updateActiveProfileHarem: IProfilesContext['updateActiveProfileHarem'] = (rawText) => {
+  const updateActiveProfileHarem: IProfilesContext['updateActiveProfileHarem'] = (rawText, options) => {
     if (!activeProfile) {
       return { ok: false, reason: 'NO_ACTIVE_PROFILE' }
     }
-    const result = updateActiveProfileHaremUseCase(activeRepository, activeProfile.id, rawText)
+    const result = updateActiveProfileHaremUseCase(activeRepository, activeProfile.id, rawText, options)
     if (result.ok) {
       syncFromRepositories()
     }
