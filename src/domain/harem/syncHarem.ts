@@ -8,6 +8,24 @@ function generateId(): string {
 }
 
 /**
+ * Reordena `items` dejando primero a los que ya tenían una posición
+ * conocida (según `existingIndexOf`, ascendente), y al final a los que
+ * no (sin posición previa), preservando entre estos últimos su orden
+ * relativo de llegada — `Array.prototype.sort` es estable (garantizado
+ * desde ES2019), así que alcanza con mandar los "nuevos" a `Infinity`.
+ * Es la pieza que hace que el orden de "quién apareció primero en el
+ * pegado" nunca pise el orden manual (drag&drop) que el usuario ya
+ * tenía: ver bug "el ordenamiento se ve pisado al actualizar la lista".
+ */
+function stableReorder<T>(items: T[], existingIndexOf: (item: T) => number | undefined): T[] {
+  return [...items].sort((a, b) => {
+    const indexA = existingIndexOf(a) ?? Number.POSITIVE_INFINITY
+    const indexB = existingIndexOf(b) ?? Number.POSITIVE_INFINITY
+    return indexA - indexB
+  })
+}
+
+/**
  * Reconcilia el harem actual de un perfil con lo recién parseado de un
  * segundo pegado del mismo perfil (mismo `id`, User Story 4 de 002,
  * FR-015a/FR-015b). El claim rank (`#N`) es la clave de identidad de
@@ -25,19 +43,31 @@ function generateId(): string {
  * `id` de una serie existente con el mismo nombre); una serie sin
  * personajes no aparece en el resultado (mismo invariante que
  * `removeCharacterFromSeries`, FR-022 de 001).
+ *
+ * El orden final de series, y el de personajes dentro de cada serie
+ * existente, respeta la posición que ya tenían en `currentHarem` (la
+ * que el usuario haya fijado a mano por drag&drop) — el orden en que
+ * vienen en `parsedSeries` solo decide dónde caen los que son nuevos
+ * (al final, en su orden de aparición en el pegado). Sin esto, cada
+ * actualización pisaba el ordenamiento manual con el orden crudo del
+ * pegado de Discord.
  */
 export function syncHarem(currentHarem: Harem, parsedSeries: ParsedSeries[]): Harem {
   const existingCharacterByClaimRank = new Map<string, Character>()
   const existingSeriesIdByName = new Map<string, string>()
+  const existingSeriesOrderByName = new Map<string, number>()
+  const existingCharacterOrderById = new Map<string, number>()
 
-  for (const series of currentHarem.series) {
+  currentHarem.series.forEach((series, seriesIndex) => {
     existingSeriesIdByName.set(series.name, series.id)
-    for (const character of series.characters) {
+    existingSeriesOrderByName.set(series.name, seriesIndex)
+    series.characters.forEach((character, characterIndex) => {
+      existingCharacterOrderById.set(character.id, characterIndex)
       if (character.claimRank) {
         existingCharacterByClaimRank.set(character.claimRank, character)
       }
-    }
-  }
+    })
+  })
 
   const seriesByName = new Map<string, Series>()
 
@@ -69,8 +99,15 @@ export function syncHarem(currentHarem: Harem, parsedSeries: ParsedSeries[]): Ha
     })
   }
 
+  const series = Array.from(seriesByName.values())
+    .filter((series) => series.characters.length > 0)
+    .map((series) => ({
+      ...series,
+      characters: stableReorder(series.characters, (character) => existingCharacterOrderById.get(character.id)),
+    }))
+
   return {
     ...currentHarem,
-    series: Array.from(seriesByName.values()).filter((series) => series.characters.length > 0),
+    series: stableReorder(series, (oneSeries) => existingSeriesOrderByName.get(oneSeries.name)),
   }
 }

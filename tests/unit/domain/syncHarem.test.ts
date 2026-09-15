@@ -114,6 +114,54 @@ describe('syncHarem', () => {
     expect(result).toEqual(current)
   })
 
+  it('conserva el orden manual existente (series y personajes) aunque el pegado nuevo venga en otro orden', () => {
+    const current = buildHarem() // orden actual: [Amagami(Haruka, Ai), Black Clover(Noelle)]
+    const parsed: ParsedSeries[] = [
+      // el pegado trae Black Clover primero y Amagami con Ai antes que Haruka
+      {
+        name: 'Black Clover',
+        characters: [{ claimRank: '#182', name: 'Noelle Silva', kakera: 479, imageUrl: 'https://mudae.net/uploads/3/noelle.png' }],
+      },
+      {
+        name: 'Amagami',
+        characters: [
+          { claimRank: '#18,351', name: 'Ai Nanasaki', kakera: 46, imageUrl: 'https://mudae.net/uploads/2/ai.png' },
+          { claimRank: '#15,140', name: 'Haruka Morishima', kakera: 49, imageUrl: 'https://mudae.net/uploads/1/haruka.png' },
+        ],
+      },
+    ]
+
+    const result = syncHarem(current, parsed)
+
+    expect(result.series.map((series) => series.name)).toEqual(['Amagami', 'Black Clover'])
+    const amagami = result.series.find((series) => series.name === 'Amagami')
+    expect(amagami?.characters.map((character) => character.claimRank)).toEqual(['#15,140', '#18,351'])
+  })
+
+  it('agrega series y personajes nuevos al final, después de los ya existentes en su orden previo', () => {
+    const current = buildHarem() // orden actual: [Amagami(Haruka, Ai), Black Clover(Noelle)]
+    const parsed: ParsedSeries[] = [
+      {
+        name: 'Amagami',
+        characters: [
+          { claimRank: '#15,140', name: 'Haruka Morishima', kakera: 49, imageUrl: 'https://mudae.net/uploads/1/haruka.png' },
+          // personaje nuevo, debe ir al final de Amagami (después de Haruka)
+          { claimRank: '#77,000', name: 'Rihoko Sakurai', kakera: 35, imageUrl: 'https://mudae.net/uploads/4/rihoko.png' },
+          { claimRank: '#18,351', name: 'Ai Nanasaki', kakera: 46, imageUrl: 'https://mudae.net/uploads/2/ai.png' },
+        ],
+      },
+      { name: 'Black Clover', characters: [{ claimRank: '#182', name: 'Noelle Silva', kakera: 479, imageUrl: 'https://mudae.net/uploads/3/noelle.png' }] },
+      // serie nueva, debe ir al final
+      { name: 'Fairy Tail', characters: [{ claimRank: '#50', name: 'Erza Scarlet', kakera: 830, imageUrl: 'https://mudae.net/uploads/5/erza.png' }] },
+    ]
+
+    const result = syncHarem(current, parsed)
+
+    expect(result.series.map((series) => series.name)).toEqual(['Amagami', 'Black Clover', 'Fairy Tail'])
+    const amagami = result.series.find((series) => series.name === 'Amagami')
+    expect(amagami?.characters.map((character) => character.claimRank)).toEqual(['#15,140', '#18,351', '#77,000'])
+  })
+
   it('una serie que queda sin personajes tras la sincronización no aparece en el resultado', () => {
     const current = buildHarem()
     const parsed: ParsedSeries[] = [
