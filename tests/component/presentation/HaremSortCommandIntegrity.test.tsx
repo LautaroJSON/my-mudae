@@ -2,10 +2,12 @@ import { describe, expect, it } from 'vitest'
 import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import HaremSortButton from '../../../src/presentation/components/HaremSortButton'
+import HaremSearchButton from '../../../src/presentation/components/HaremSearchButton'
 import SortCommandToggle from '../../../src/presentation/components/SortCommandToggle'
 import HaremView from '../../../src/presentation/components/HaremView'
 import ProfilesProvider from '../../../src/presentation/context/ProfilesContext'
 import HaremSortProvider from '../../../src/presentation/context/HaremSortContext'
+import HaremSearchProvider from '../../../src/presentation/context/HaremSearchContext'
 import { renderWithTheme } from '../../support/renderWithTheme'
 import { InMemoryProfileRepository } from '../../support/InMemoryProfileRepository'
 import type { Harem } from '../../../src/domain/harem/Harem'
@@ -57,9 +59,11 @@ describe('Integridad del comando $sm con el ordenamiento temporal por kakera act
     renderWithTheme(
       <ProfilesProvider repository={repository}>
         <HaremSortProvider>
-          <HaremSortButton />
-          <SortCommandToggle />
-          <HaremView harem={harem} />
+          <HaremSearchProvider>
+            <HaremSortButton />
+            <SortCommandToggle />
+            <HaremView harem={harem} />
+          </HaremSearchProvider>
         </HaremSortProvider>
       </ProfilesProvider>,
     )
@@ -77,6 +81,54 @@ describe('Integridad del comando $sm con el ordenamiento temporal por kakera act
     expect(screen.getByDisplayValue('$sm Haruka $ Ai $ Noelle')).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: /valor de kakera/i }))
+
+    expect(screen.getByDisplayValue('$sm Haruka $ Ai $ Noelle')).toBeInTheDocument()
+  })
+})
+
+// Escenario 7 de quickstart.md / Principio II (011): el comando $sm
+// tampoco debe reflejar el filtro de búsqueda temporal — mismo gate
+// crítico que el ordenamiento por kakera de arriba, ahora para 011.
+describe('Integridad del comando $sm con una búsqueda activa (Principio II, 011)', () => {
+  it('el comando exportado sigue enumerando todos los personajes, con la búsqueda activa o inactiva', async () => {
+    const user = userEvent.setup()
+    const harem = buildHarem()
+    const profile: Profile = {
+      id: harem.profileId,
+      serverId: 'server-1',
+      username: harem.profileId,
+      alias: harem.profileId,
+      isActive: true,
+      createdAt: '2026-01-01T00:00:00.000Z',
+      harem,
+    }
+    const repository = new InMemoryProfileRepository([profile])
+
+    renderWithTheme(
+      <ProfilesProvider repository={repository}>
+        <HaremSortProvider>
+          <HaremSearchProvider>
+            <HaremSearchButton />
+            <SortCommandToggle />
+            <HaremView harem={harem} />
+          </HaremSearchProvider>
+        </HaremSortProvider>
+      </ProfilesProvider>,
+    )
+
+    await user.click(screen.getByRole('button', { name: /mostrar comando de orden/i }))
+    expect(screen.getByDisplayValue('$sm Haruka $ Ai $ Noelle')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: /buscar en el harem/i }))
+    await user.type(screen.getByLabelText(/buscar personaje o serie/i), 'Noelle')
+
+    // El harem renderizado ya está filtrado (solo "Black Clover"/"Noelle"),
+    // pero el comando sigue enumerando a todo el harem.
+    expect(screen.queryByRole('region', { name: 'Amagami' })).not.toBeInTheDocument()
+    expect(screen.getByRole('region', { name: 'Black Clover' })).toBeInTheDocument()
+    expect(screen.getByDisplayValue('$sm Haruka $ Ai $ Noelle')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: /cerrar buscador/i }))
 
     expect(screen.getByDisplayValue('$sm Haruka $ Ai $ Noelle')).toBeInTheDocument()
   })

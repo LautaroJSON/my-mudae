@@ -159,6 +159,8 @@ export const layout = {
   containerNarrow: "40rem",
   containerWide: "118rem",
   dialogWidth: "24rem",
+  /** Ancho del campo de búsqueda expandido de `HaremSearchButton` (011) — usado como `min(searchFieldWidth, 45vw)` para no desbordar `HeaderActions`/`Bar` en viewports angostos (Principio V). */
+  searchFieldWidth: "12rem",
 } as const;
 
 // Header fijo por encima del contenido normal; overlay/modal comparten

@@ -142,3 +142,50 @@ export function sortHaremByKakera(harem: Harem, direction: KakeraSortDirection):
 
   return { ...harem, series }
 }
+
+// Descompone diacríticos (NFD) y remueve las marcas combinantes resultantes
+// (acentos) antes de comparar — a diferencia de `normalizeUsername`
+// (`domain/profile/username.ts`, pensado para igualdad exacta de un
+// username sin acentos habitualmente), acá los nombres de personajes/series
+// sí llevan tildes con frecuencia y la búsqueda debe ignorarlas (FR-007 de
+// 011).
+const DIACRITIC_MARKS = /[̀-ͯ]/g
+
+function normalizeSearchText(value: string): string {
+  return value.normalize('NFD').replace(DIACRITIC_MARKS, '').trim().toLocaleLowerCase()
+}
+
+/**
+ * Devuelve una vista temporal del harem filtrada por `query` (User Story 1
+ * de 011): una serie cuyo título coincide entra completa, con **la misma
+ * referencia** de objeto `Series` (no se reconstruye) para no invalidar la
+ * memoización de `SeriesGroup` en series que no cambian de contenido entre
+ * una tecla y la siguiente (Principio III); si el título no coincide, se
+ * conservan solo los personajes cuyo nombre coincide, en un objeto `Series`
+ * nuevo. La coincidencia es por subcadena, insensible a mayúsculas/
+ * minúsculas y a acentos (`normalizeSearchText`, FR-007). Con `query` vacío
+ * o solo espacios, devuelve `harem` sin filtrar (misma referencia, FR-011)
+ * — nunca muta la entrada ni persiste su resultado (lo decide quien la
+ * invoca, ver `HaremView`).
+ */
+export function filterHaremByQuery(harem: Harem, query: string): Harem {
+  const normalizedQuery = normalizeSearchText(query)
+  if (!normalizedQuery) {
+    return harem
+  }
+
+  const series = harem.series.reduce<Series[]>((matched, series) => {
+    if (normalizeSearchText(series.name).includes(normalizedQuery)) {
+      matched.push(series)
+      return matched
+    }
+
+    const characters = series.characters.filter((character) => normalizeSearchText(character.name).includes(normalizedQuery))
+    if (characters.length > 0) {
+      matched.push({ ...series, characters })
+    }
+    return matched
+  }, [])
+
+  return { ...harem, series }
+}

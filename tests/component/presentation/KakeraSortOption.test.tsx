@@ -5,6 +5,7 @@ import KakeraSortOption from '../../../src/presentation/components/KakeraSortOpt
 import HaremView from '../../../src/presentation/components/HaremView'
 import ProfilesProvider from '../../../src/presentation/context/ProfilesContext'
 import HaremSortProvider from '../../../src/presentation/context/HaremSortContext'
+import HaremSearchProvider from '../../../src/presentation/context/HaremSearchContext'
 import { renderWithTheme } from '../../support/renderWithTheme'
 import { InMemoryProfileRepository } from '../../support/InMemoryProfileRepository'
 import type { Harem } from '../../../src/domain/harem/Harem'
@@ -40,8 +41,10 @@ function renderWithHaremView(harem: Harem) {
   return renderWithTheme(
     <ProfilesProvider repository={repository}>
       <HaremSortProvider>
-        <KakeraSortOption />
-        <HaremView harem={harem} />
+        <HaremSearchProvider>
+          <KakeraSortOption />
+          <HaremView harem={harem} />
+        </HaremSearchProvider>
       </HaremSortProvider>
     </ProfilesProvider>,
   )

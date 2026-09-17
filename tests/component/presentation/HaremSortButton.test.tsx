@@ -6,6 +6,7 @@ import HeaderActions from '../../../src/presentation/components/HeaderActions'
 import HaremView from '../../../src/presentation/components/HaremView'
 import ProfilesProvider from '../../../src/presentation/context/ProfilesContext'
 import HaremSortProvider from '../../../src/presentation/context/HaremSortContext'
+import HaremSearchProvider from '../../../src/presentation/context/HaremSearchContext'
 import { renderWithTheme } from '../../support/renderWithTheme'
 import { InMemoryProfileRepository } from '../../support/InMemoryProfileRepository'
 import type { Harem } from '../../../src/domain/harem/Harem'
@@ -57,7 +58,9 @@ describe('HeaderActions - visibilidad de HaremSortButton', () => {
     renderWithTheme(
       <ProfilesProvider repository={new InMemoryProfileRepository([buildProfile(harem)])}>
         <HaremSortProvider>
-          <HeaderActions />
+          <HaremSearchProvider>
+            <HeaderActions />
+          </HaremSearchProvider>
         </HaremSortProvider>
       </ProfilesProvider>,
     )
@@ -71,8 +74,10 @@ function renderHaremSortButton(harem: Harem) {
   return renderWithTheme(
     <ProfilesProvider repository={repository}>
       <HaremSortProvider>
-        <HaremSortButton />
-        <HaremView harem={harem} />
+        <HaremSearchProvider>
+          <HaremSortButton />
+          <HaremView harem={harem} />
+        </HaremSearchProvider>
       </HaremSortProvider>
     </ProfilesProvider>,
   )

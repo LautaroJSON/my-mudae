@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import ProfilesProvider from '../../../src/presentation/context/ProfilesContext'
+import HaremSortProvider from '../../../src/presentation/context/HaremSortContext'
+import HaremSearchProvider from '../../../src/presentation/context/HaremSearchContext'
 import Header from '../../../src/presentation/components/Header'
 import { InMemoryProfileRepository } from '../../support/InMemoryProfileRepository'
 import { renderWithTheme } from '../../support/renderWithTheme'
@@ -23,7 +25,11 @@ function buildProfile(overrides: Partial<Profile> = {}): Profile {
 function renderHeader(repository = new InMemoryProfileRepository()) {
   renderWithTheme(
     <ProfilesProvider repository={repository}>
-      <Header />
+      <HaremSortProvider>
+        <HaremSearchProvider>
+          <Header />
+        </HaremSearchProvider>
+      </HaremSortProvider>
     </ProfilesProvider>,
   )
 }

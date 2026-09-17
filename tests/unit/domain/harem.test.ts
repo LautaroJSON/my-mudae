@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   countCharacters,
+  filterHaremByQuery,
   reorderCharactersInSeries,
   reorderSeries,
   removeCharacterFromSeries,
@@ -369,5 +370,113 @@ describe('sortHaremByKakera', () => {
     const next = sortHaremByKakera(harem, 'desc')
 
     expect(next.series).toEqual([])
+  })
+})
+
+function buildHaremForSearch(): Harem {
+  return {
+    profileId: 'profile-1',
+    series: [
+      {
+        id: 'series-konosuba',
+        name: 'Konosuba',
+        characters: [
+          { id: 'char-aqua', name: 'Aqua', imageUrl: 'https://x/aqua.png' },
+          { id: 'char-megumin', name: 'Megumin', imageUrl: 'https://x/megumin.png' },
+        ],
+      },
+      {
+        id: 'series-dragon-ball',
+        name: 'Dragon Ball',
+        characters: [
+          { id: 'char-goku', name: 'Goku', imageUrl: 'https://x/goku.png' },
+          { id: 'char-vegeta', name: 'Vegeta', imageUrl: 'https://x/vegeta.png' },
+        ],
+      },
+      {
+        id: 'series-demon-slayer',
+        name: 'Demon Slayer',
+        characters: [{ id: 'char-nezuko', name: 'Nézuko', imageUrl: 'https://x/nezuko.png' }],
+      },
+    ],
+  }
+}
+
+describe('filterHaremByQuery', () => {
+  it('devuelve exactamente el mismo harem (misma referencia) cuando el query es vacío', () => {
+    const harem = buildHaremForSearch()
+
+    expect(filterHaremByQuery(harem, '')).toBe(harem)
+  })
+
+  it('devuelve exactamente el mismo harem (misma referencia) cuando el query es solo espacios', () => {
+    const harem = buildHaremForSearch()
+
+    expect(filterHaremByQuery(harem, '   ')).toBe(harem)
+  })
+
+  it('coincidencia por título de serie: incluye la serie completa, con la misma referencia de objeto (FR-005)', () => {
+    const harem = buildHaremForSearch()
+
+    const next = filterHaremByQuery(harem, 'konosuba')
+
+    expect(next.series.map((series) => series.id)).toEqual(['series-konosuba'])
+    const konosuba = next.series[0]
+    expect(konosuba).toBe(harem.series[0])
+    expect(konosuba.characters.map((c) => c.id)).toEqual(['char-aqua', 'char-megumin'])
+  })
+
+  it('coincidencia por nombre de personaje: incluye solo ese personaje, en un objeto Series nuevo (FR-006)', () => {
+    const harem = buildHaremForSearch()
+
+    const next = filterHaremByQuery(harem, 'goku')
+
+    expect(next.series.map((series) => series.id)).toEqual(['series-dragon-ball'])
+    const dragonBall = next.series[0]
+    expect(dragonBall).not.toBe(harem.series[1])
+    expect(dragonBall.characters.map((c) => c.id)).toEqual(['char-goku'])
+    expect(dragonBall.characters[0]).toBe(harem.series[1].characters[0])
+  })
+
+  it('coincidencia insensible a mayúsculas y acentos (FR-007)', () => {
+    const harem = buildHaremForSearch()
+
+    const upper = filterHaremByQuery(harem, 'KONOSUBA')
+    expect(upper.series.map((series) => series.id)).toEqual(['series-konosuba'])
+
+    const withoutAccent = filterHaremByQuery(harem, 'nezuko')
+    expect(withoutAccent.series.map((series) => series.id)).toEqual(['series-demon-slayer'])
+    expect(withoutAccent.series[0].characters.map((c) => c.id)).toEqual(['char-nezuko'])
+  })
+
+  it('sin coincidencias, devuelve el harem con series: []', () => {
+    const harem = buildHaremForSearch()
+
+    const next = filterHaremByQuery(harem, 'zzzznoexiste')
+
+    expect(next.series).toEqual([])
+  })
+
+  it('conserva el orden relativo de las series que coinciden', () => {
+    const harem = buildHaremForSearch()
+
+    const next = filterHaremByQuery(harem, 'e')
+
+    expect(next.series.map((series) => series.id)).toEqual(['series-konosuba', 'series-dragon-ball', 'series-demon-slayer'])
+  })
+
+  it('no muta el harem recibido', () => {
+    const harem = buildHaremForSearch()
+    const snapshot = JSON.parse(JSON.stringify(harem))
+
+    filterHaremByQuery(harem, 'goku')
+
+    expect(harem).toEqual(snapshot)
+  })
+
+  it('tolera un harem sin series', () => {
+    const harem: Harem = { profileId: 'profile-1', series: [] }
+
+    expect(filterHaremByQuery(harem, 'algo').series).toEqual([])
   })
 })

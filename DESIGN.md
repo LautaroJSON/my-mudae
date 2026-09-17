@@ -144,7 +144,9 @@ puro `#000000`). El modo se activa automáticamente por
 - Contenedores centrados con ancho máximo fijo
   (`theme.layout`): `containerNarrow` 40rem (pantalla de pegado),
   `containerWide` 60rem (harem, selector de perfiles), `dialogWidth`
-  24rem.
+  24rem, `searchFieldWidth` 12rem (campo de búsqueda expandido de
+  `HaremSearchButton`, 011 — usado como `min(searchFieldWidth, 45vw)`
+  para no desbordar el header en viewports angostos).
 - Grilla de personajes con `flex-wrap` (no grid-template fijo): a
   densidad "Balanceada", cada `CharacterCard` mide 9rem y las tarjetas
   fluyen según el ancho disponible — mobile-first por construcción, sin
