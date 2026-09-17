@@ -9,7 +9,10 @@ function buildProfile(): Profile {
     id: 'rodoifin',
     serverId: 'server-1',
     username: 'rodoifin',
-    alias: 'rodoifin',
+    // Distinto de `username` a propósito: hace que un test que por error
+    // leyera `alias` en vez de `username` falle (ver fix de "el copiado
+    // devuelve el alias en vez del username").
+    alias: 'Mi Cuenta Principal',
     isActive: true,
     createdAt: '2026-01-01T00:00:00.000Z',
     harem: {
@@ -63,7 +66,7 @@ describe('formatHaremMessage', () => {
     expect(result.ok).toBe(true)
     if (!result.ok) return
 
-    expect(result.profileName).toBe(profile.alias)
+    expect(result.profileName).toBe(profile.username)
     expect(result.series.map((series) => series.name)).toEqual(['Amagami', 'Black Clover'])
     expect(result.series[0].characters).toEqual([
       { claimRank: '#15,140', name: 'Haruka Morishima', kakera: 49, imageUrl: 'https://mudae.net/uploads/8452996/kAI0tM8~ApLrugo.png' },
@@ -72,6 +75,16 @@ describe('formatHaremMessage', () => {
     expect(result.series[1].characters).toEqual([
       { claimRank: '#182', name: 'Noelle Silva', kakera: undefined, imageUrl: 'https://mudae.net/uploads/8359937/KepDTJs~L1GuaoM.png' },
     ])
+  })
+
+  it('usa el username en el encabezado, nunca el alias (bug: el copiado devolvía el alias)', () => {
+    const profile = buildProfile()
+    expect(profile.alias).not.toBe(profile.username) // guardia: el fixture debe ejercitar la diferencia
+
+    const text = formatHaremMessage(profile)
+
+    expect(text.split('\n')[0]).toBe(`${profile.username}'s harem`)
+    expect(text).not.toContain(profile.alias)
   })
 
   it('omite una serie sin personajes en el texto generado', () => {

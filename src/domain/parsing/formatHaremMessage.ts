@@ -6,6 +6,15 @@ import type { Character } from '../harem/Character'
  * `parseHaremMessage` reconoce como entrada (función inversa, ver
  * contracts/format-harem-message.md). Función pura de `domain/`: no
  * depende de React/`styled-components`/`localStorage`/`navigator`.
+ *
+ * El encabezado usa `profile.username`, nunca `profile.alias`: es el
+ * valor que `updateActiveProfileHarem`/`createProfileWithServer`
+ * comparan para reconocer que un pegado corresponde a este perfil (ver
+ * `domain/profile/username.ts`). `alias` es solo el nombre visible y
+ * editable dentro de la app (002); usarlo acá hacía que compartir el
+ * harem de un perfil renombrado generara un texto que, al re-pegarse,
+ * fallaba la comparación de nombre por una discordancia inexistente en
+ * Mudae/Discord.
  */
 
 function normalizeClaimRank(character: Character, positionInSeries: number): string {
@@ -30,7 +39,7 @@ function formatCharacterLine(character: Character, positionInSeries: number): st
 }
 
 export function formatHaremMessage(profile: Profile): string {
-  const lines: string[] = [`${profile.alias}'s harem`]
+  const lines: string[] = [`${profile.username}'s harem`]
 
   for (const series of profile.harem.series) {
     if (series.characters.length === 0) {
