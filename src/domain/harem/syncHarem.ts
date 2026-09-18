@@ -28,15 +28,28 @@ function stableReorder<T>(items: T[], existingIndexOf: (item: T) => number | und
 /**
  * Reconcilia el harem actual de un perfil con lo recién parseado de un
  * segundo pegado del mismo perfil (mismo `id`, User Story 4 de 002,
- * FR-015a/FR-015b). El claim rank (`#N`) es la clave de identidad de
- * "es el mismo personaje reclamado" entre ambos pegados — ver
- * contracts/sync-harem.md:
+ * FR-015a/FR-015b). La clave de identidad de "es el mismo personaje
+ * reclamado" entre ambos pegados es el **nombre** del personaje (por
+ * cola FIFO ante duplicados, ver `existingCharactersByName` más abajo),
+ * NO el claim rank (`#N`) — a pesar de lo que decidió research.md de
+ * 002. El `#N` de Mudae no identifica una copia puntual reclamada: es
+ * el ranking global de claims de ese personaje entre TODOS los
+ * usuarios de Mudae, así que cambia con el tiempo aunque el usuario no
+ * toque nada de su harem. Usarlo como clave hacía que, en cualquier
+ * actualización donde ese ranking global se hubiera movido, el
+ * personaje se viera como "nuevo" (id nuevo, sin posición previa) y
+ * terminara reubicado al final por `stableReorder` — el bug real
+ * detrás de "el orden de los personajes se desordena al actualizar el
+ * harem", pese a que las series (agrupadas por nombre, siempre
+ * estable) no se veían afectadas. Ver contracts/sync-harem.md:
  *
- * - claim rank ya presente en el harem actual → se actualiza ese
- *   personaje (nombre/imagen/kakera), conservando su `id` interno para
- *   no re-disparar su animación de entrada si no cambió de verdad.
- * - claim rank nuevo → se agrega como personaje nuevo (`id` generado).
- * - claim rank del harem actual que no aparece en el pegado nuevo → se
+ * - nombre ya presente en el harem actual (por orden de aparición,
+ *   ante duplicados) → se actualiza ese personaje (imagen/kakera/claim
+ *   rank), conservando su `id` interno para no re-disparar su
+ *   animación de entrada si no cambió de verdad.
+ * - nombre nuevo (o duplicado sin más copias existentes disponibles) →
+ *   se agrega como personaje nuevo (`id` generado).
+ * - nombre del harem actual que no aparece en el pegado nuevo → se
  *   descarta (no sobrevive en el resultado).
  *
  * Las series se agrupan según el pegado más reciente (conservando el
@@ -53,7 +66,7 @@ function stableReorder<T>(items: T[], existingIndexOf: (item: T) => number | und
  * pegado de Discord.
  */
 export function syncHarem(currentHarem: Harem, parsedSeries: ParsedSeries[]): Harem {
-  const existingCharacterByClaimRank = new Map<string, Character>()
+  const existingCharactersByName = new Map<string, Character[]>()
   const existingSeriesIdByName = new Map<string, string>()
   const existingSeriesOrderByName = new Map<string, number>()
   const existingCharacterOrderById = new Map<string, number>()
@@ -63,8 +76,11 @@ export function syncHarem(currentHarem: Harem, parsedSeries: ParsedSeries[]): Ha
     existingSeriesOrderByName.set(series.name, seriesIndex)
     series.characters.forEach((character, characterIndex) => {
       existingCharacterOrderById.set(character.id, characterIndex)
-      if (character.claimRank) {
-        existingCharacterByClaimRank.set(character.claimRank, character)
+      const queue = existingCharactersByName.get(character.name)
+      if (queue) {
+        queue.push(character)
+      } else {
+        existingCharactersByName.set(character.name, [character])
       }
     })
   })
@@ -73,9 +89,12 @@ export function syncHarem(currentHarem: Harem, parsedSeries: ParsedSeries[]): Ha
 
   for (const parsedSerie of parsedSeries) {
     const characters: Character[] = parsedSerie.characters.map((parsedCharacter) => {
-      const existing = parsedCharacter.claimRank
-        ? existingCharacterByClaimRank.get(parsedCharacter.claimRank)
-        : undefined
+      // `.shift()` consume la copia existente más antigua con este
+      // nombre primero, así que ante duplicados (dos copias del mismo
+      // personaje) cada una conserva su propio `id` en el mismo orden
+      // relativo en que ya aparecían, en vez de que ambas colapsen a
+      // una sola identidad.
+      const existing = existingCharactersByName.get(parsedCharacter.name)?.shift()
 
       return {
         id: existing?.id ?? generateId(),

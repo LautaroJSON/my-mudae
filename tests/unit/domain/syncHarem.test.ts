@@ -162,6 +162,60 @@ describe('syncHarem', () => {
     expect(amagami?.characters.map((character) => character.claimRank)).toEqual(['#15,140', '#18,351', '#77,000'])
   })
 
+  it('un personaje existente no se trata como nuevo cuando cambia su claim rank (ranking global de Mudae, no un id de esa copia)', () => {
+    const current = buildHarem() // orden actual: [Amagami(Haruka, Ai), Black Clover(Noelle)]
+    const parsed: ParsedSeries[] = [
+      {
+        name: 'Amagami',
+        characters: [
+          // mismo personaje, pero el "#N" de Mudae se movió (le puede
+          // pasar a cualquiera sin que el usuario reclame/pierda nada)
+          { claimRank: '#20,000', name: 'Haruka Morishima', kakera: 49, imageUrl: 'https://mudae.net/uploads/1/haruka.png' },
+          { claimRank: '#18,351', name: 'Ai Nanasaki', kakera: 46, imageUrl: 'https://mudae.net/uploads/2/ai.png' },
+        ],
+      },
+      { name: 'Black Clover', characters: [{ claimRank: '#182', name: 'Noelle Silva', kakera: 479, imageUrl: 'https://mudae.net/uploads/3/noelle.png' }] },
+    ]
+
+    const result = syncHarem(current, parsed)
+
+    expect(result.series.map((series) => series.name)).toEqual(['Amagami', 'Black Clover'])
+    const amagami = result.series.find((series) => series.name === 'Amagami')
+    // conserva el id y el orden de Haruka (sigue primera) pese al claim rank distinto
+    expect(amagami?.characters.map((character) => character.id)).toEqual(['char-haruka', 'char-ai'])
+    expect(amagami?.characters[0].claimRank).toBe('#20,000')
+  })
+
+  it('dos copias del mismo personaje (mismo nombre, distinto claim rank) se emparejan por orden de aparición, no colapsan a una sola', () => {
+    const current: Harem = {
+      profileId: 'rodoifin',
+      series: [
+        {
+          id: 'series-amagami',
+          name: 'Amagami',
+          characters: [
+            { id: 'char-copy-1', name: 'Haruka Morishima', imageUrl: 'https://mudae.net/uploads/1/haruka.png', kakera: 49, claimRank: '#100' },
+            { id: 'char-copy-2', name: 'Haruka Morishima', imageUrl: 'https://mudae.net/uploads/1/haruka.png', kakera: 30, claimRank: '#200' },
+          ],
+        },
+      ],
+    }
+    const parsed: ParsedSeries[] = [
+      {
+        name: 'Amagami',
+        characters: [
+          { claimRank: '#150', name: 'Haruka Morishima', kakera: 49, imageUrl: 'https://mudae.net/uploads/1/haruka.png' },
+          { claimRank: '#250', name: 'Haruka Morishima', kakera: 30, imageUrl: 'https://mudae.net/uploads/1/haruka.png' },
+        ],
+      },
+    ]
+
+    const result = syncHarem(current, parsed)
+
+    const amagami = result.series.find((series) => series.name === 'Amagami')
+    expect(amagami?.characters.map((character) => character.id)).toEqual(['char-copy-1', 'char-copy-2'])
+  })
+
   it('una serie que queda sin personajes tras la sincronización no aparece en el resultado', () => {
     const current = buildHarem()
     const parsed: ParsedSeries[] = [
