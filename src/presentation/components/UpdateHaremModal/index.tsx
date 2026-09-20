@@ -1,10 +1,12 @@
-import { useRef, useState, type ClipboardEvent } from "react";
+import { useRef, useState, type ChangeEvent, type ClipboardEvent } from "react";
 import { useProfiles } from "../../context/ProfilesContext";
 import Modal from "../Modal";
 import {
   ButtonRow,
   ErrorMessage,
+  FileInput,
   ForceButton,
+  LoadFileButton,
   Message,
   MismatchName,
   PasteZone,
@@ -47,16 +49,11 @@ type View =
 const UpdateHaremModal = ({ onClose, onUpdated }: IUpdateHaremModal) => {
   const { activeProfile, updateActiveProfileHarem } = useProfiles();
   const pasteZoneRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [view, setView] = useState<View>({ kind: "paste" });
 
-  const handlePaste = (event: ClipboardEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    const pastedText = event.clipboardData.getData("text");
-    const result = updateActiveProfileHarem(pastedText);
-
-    if (pasteZoneRef.current) {
-      pasteZoneRef.current.textContent = "";
-    }
+  const processHaremText = (text: string) => {
+    const result = updateActiveProfileHarem(text);
 
     if (result.ok) {
       onUpdated();
@@ -68,7 +65,7 @@ const UpdateHaremModal = ({ onClose, onUpdated }: IUpdateHaremModal) => {
         kind: "mismatch",
         pastedProfileName: result.pastedProfileName,
         profileUsername: result.profileUsername,
-        pastedText,
+        pastedText: text,
       });
       return;
     }
@@ -78,6 +75,36 @@ const UpdateHaremModal = ({ onClose, onUpdated }: IUpdateHaremModal) => {
       formatError:
         "No se reconoció el formato del harem pegado. Verificá que sea el mensaje completo que te manda Mudae.",
     });
+  };
+
+  const handlePaste = (event: ClipboardEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    const pastedText = event.clipboardData.getData("text");
+
+    if (pasteZoneRef.current) {
+      pasteZoneRef.current.textContent = "";
+    }
+
+    processHaremText(pastedText);
+  };
+
+  const handleLoadFileClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) {
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const text = typeof reader.result === "string" ? reader.result : "";
+      processHaremText(text);
+    };
+    reader.readAsText(file);
   };
 
   if (view.kind === "mismatch") {
@@ -138,6 +165,15 @@ const UpdateHaremModal = ({ onClose, onUpdated }: IUpdateHaremModal) => {
       {view.formatError && (
         <ErrorMessage role="alert">{view.formatError}</ErrorMessage>
       )}
+      <LoadFileButton type="button" onClick={handleLoadFileClick}>
+        Cargar desde archivo.txt
+      </LoadFileButton>
+      <FileInput
+        ref={fileInputRef}
+        type="file"
+        accept=".txt,text/plain"
+        onChange={handleFileChange}
+      />
     </Modal>
   );
 };

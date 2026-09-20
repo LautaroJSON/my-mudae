@@ -75,6 +75,30 @@ export const PasteZone = styled.div`
   }
 `
 
+// Alternativa a pegar: carga un .txt con el mismo formato del mensaje de
+// Mudae. Centrado y con estilo de acción secundaria, ya que pegar sigue
+// siendo el flujo principal.
+export const LoadFileButton = styled.button`
+  align-self: center;
+  padding: ${(props) => props.theme.spacing.sm} ${(props) => props.theme.spacing.md};
+  border-radius: ${(props) => props.theme.radii.sm};
+  border: 1px solid ${(props) => props.theme.colors.border};
+  background: transparent;
+  color: ${(props) => props.theme.colors.textSecondary};
+  font-size: ${(props) => props.theme.typography.size.base};
+  font-weight: ${(props) => props.theme.typography.weight.semibold};
+  cursor: pointer;
+
+  &:hover {
+    border-color: ${(props) => props.theme.colors.accent};
+    color: ${(props) => props.theme.colors.textPrimary};
+  }
+`
+
+export const FileInput = styled.input`
+  display: none;
+`
+
 export const ErrorMessage = styled.p`
   margin: 0;
   font-size: ${(props) => props.theme.typography.size.sm};
