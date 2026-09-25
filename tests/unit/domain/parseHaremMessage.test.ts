@@ -337,4 +337,61 @@ Adachi to Shimamura - 3/10
     expect(result.profileName).toBe('')
     expect(result.series.map((series) => series.name)).toEqual(['Amagami'])
   })
+
+  it('reconoce el espacio como separador de miles en claim rank, kakera y total (ejemplo real de donzerot)', () => {
+    const message = `donzerot's harem
+
+Total value: 31 513
+
+Attack on Titan - 4/96
+#115 - Annie Leonhart 562 ka - https://mudae.net/uploads/2792517/FJNgTPL~lps71dq.gif
+#2 155 - Hitch Dreyse 108 ka - https://mudae.net/uploads/4467808/yW3PjeE~yhF3prs.gif
+#12 040 - Agent 47 1 204 ka - https://mudae.net/x.png
+#15 140 - Mikasa Ackerman - https://mudae.net/y.png`
+
+    const result = parseHaremMessage(message)
+
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+
+    expect(result.series[0].characters).toEqual([
+      { claimRank: '#115', name: 'Annie Leonhart', kakera: 562, imageUrl: 'https://mudae.net/uploads/2792517/FJNgTPL~lps71dq.gif' },
+      { claimRank: '#2 155', name: 'Hitch Dreyse', kakera: 108, imageUrl: 'https://mudae.net/uploads/4467808/yW3PjeE~yhF3prs.gif' },
+      { claimRank: '#12 040', name: 'Agent 47', kakera: 1204, imageUrl: 'https://mudae.net/x.png' },
+      { claimRank: '#15 140', name: 'Mikasa Ackerman', kakera: undefined, imageUrl: 'https://mudae.net/y.png' },
+    ])
+  })
+
+  it('acepta no-break space (U+00A0) y narrow no-break space (U+202F) como separador de miles', () => {
+    const message = `donzerot's harem
+Total value: 31 513
+Attack on Titan - 4/1 096
+#2 155 - Hitch Dreyse 1 108 ka - https://mudae.net/a.png
+#3 200 - Pieck Finger 372 ka - https://mudae.net/b.png`
+
+    const result = parseHaremMessage(message)
+
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+
+    expect(result.series[0].name).toBe('Attack on Titan')
+    expect(result.series[0].characters.map((c) => [c.name, c.kakera])).toEqual([
+      ['Hitch Dreyse', 1108],
+      ['Pieck Finger', 372],
+    ])
+  })
+
+  it('no toma un número al final del nombre como parte del kakera cuando el mensaje no usa espacios como separador', () => {
+    const message = `rodoifin's harem
+Total value: 23,899
+Hitman - 1/3
+#1,500 - Agent 47 120 ka - https://mudae.net/a.png`
+
+    const result = parseHaremMessage(message)
+
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+
+    expect(result.series[0].characters[0]).toMatchObject({ name: 'Agent 47', kakera: 120 })
+  })
 })

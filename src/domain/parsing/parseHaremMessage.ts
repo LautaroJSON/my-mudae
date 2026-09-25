@@ -25,32 +25,72 @@ export type ParsedHaremMessage =
 // "rodoifin's harem" → nombre de perfil.
 const PROFILE_HEADER = /^(.+)'s harem$/
 
+// Separadores de miles que usa Mudae según el idioma/config del bot:
+// "1,234", "1.234" o "1 234". El espacio puede llegar como espacio común,
+// no-break space (U+00A0) o narrow no-break space (U+202F, formato
+// francés), según de dónde se haya copiado el mensaje.
+const SPACE_SEPARATOR = '[ \\u00a0\\u202f]'
+const ANY_SEPARATOR = `(?:[.,]|${SPACE_SEPARATOR})`
+const PUNCTUATION_SEPARATOR = '[.,]'
+
+// Número entero con separador de miles opcional: "155", "15140",
+// "2,155", "2.155", "2 155". Los grupos después del primero siempre son
+// de exactamente 3 dígitos (nunca "2 15" ni "47 12").
+function numberPattern(separator: string): string {
+  return `\\d+(?:${separator}\\d{3})*`
+}
+
 // "Amagami - 5/11" → nombre de serie (la fracción X/Y se descarta).
-// Los números grandes de Mudae pueden venir con "," o "." como separador
-// de miles según el idioma/config del bot (p. ej. "1.234" en vez de
-// "1,234"); ambos se aceptan en todos los números de esta línea.
-const SERIES_HEADER = /^(.+) - \d[\d.,]*\/\d[\d.,]*$/
+// Ambos números de la fracción aceptan cualquier separador de miles: el
+// " - " que los precede y el fin de línea hacen que nunca sea ambiguo.
+const SERIES_HEADER = new RegExp(
+  `^(.+) - ${numberPattern(ANY_SEPARATOR)}\\/${numberPattern(ANY_SEPARATOR)}$`,
+)
 
 // "#15,140 - Haruka Morishima 49 ka - https://mudae.net/uploads/...png"
 // La URL puede venir envuelta en "<...>" (p. ej. "<https://imgur.com/x.png>"):
 // Discord/Mudae suprimen así la previsualización de embed para imágenes
 // personalizadas (no-mudae.net) en harems largos. Los "<"/">" se excluyen
 // de la captura para no terminar con una URL inválida con ese sobrante.
-// El claim rank y el kakera aceptan "," o "." como separador de miles
-// (p. ej. kakera "1.000" arriba de 999) — ver `parseKakeraValue`.
-const CHARACTER_WITH_KAKERA =
-  /^#([\d.,]+) - (.+?) (\d[\d.,]*) ka - <?(https?:\/\/[^\s<>]+)>?$/
+// El claim rank acepta cualquier separador de miles ("#2 155" incluido):
+// va pegado al "#" y seguido de " - ", así que nunca es ambiguo.
+//
+// El kakera, en cambio, va pegado al final del nombre: con el espacio
+// como separador, "Agent 47 120 ka" podría leerse como kakera 47120. Por
+// eso el espacio sólo se acepta en el kakera cuando el mensaje entero usa
+// espacio como separador de miles (ver `usesSpaceThousandsSeparator`).
+function characterWithKakeraPattern(kakeraSeparator: string): RegExp {
+  return new RegExp(
+    `^#(${numberPattern(ANY_SEPARATOR)}) - (.+?) (${numberPattern(kakeraSeparator)}) ka - <?(https?:\\/\\/[^\\s<>]+)>?$`,
+  )
+}
+
+const CHARACTER_WITH_KAKERA = characterWithKakeraPattern(PUNCTUATION_SEPARATOR)
+const CHARACTER_WITH_SPACED_KAKERA = characterWithKakeraPattern(ANY_SEPARATOR)
 
 // Variante sin kakera reconocible (FR-006), p. ej. cuando Mudae todavía no
 // lo calculó: "#182 - Noelle Silva - https://mudae.net/uploads/...png"
-const CHARACTER_WITHOUT_KAKERA = /^#([\d.,]+) - (.+?) - <?(https?:\/\/[^\s<>]+)>?$/
+const CHARACTER_WITHOUT_KAKERA = new RegExp(
+  `^#(${numberPattern(ANY_SEPARATOR)}) - (.+?) - <?(https?:\\/\\/[^\\s<>]+)>?$`,
+)
+
+// Un número con espacio como separador de miles en una posición que no
+// admite otra lectura: el "Total value" o el claim rank de un personaje.
+const SPACE_SEPARATED_NUMBER = new RegExp(
+  `^(?:Total value: |#)\\d{1,3}${SPACE_SEPARATOR}\\d{3}(?!\\d)`,
+)
+
+function usesSpaceThousandsSeparator(lines: string[]): boolean {
+  return lines.some((line) => SPACE_SEPARATED_NUMBER.test(line.trim()))
+}
 
 // El kakera de Mudae siempre es un entero (nunca fraccionario), así que
-// tanto "," como "." que aparezcan en el número son separador de miles,
-// nunca un punto decimal: "1.000"/"1,000" ka → 1000 (FR-006 original;
-// edge case de kakera de 4+ dígitos con separador de miles).
+// cualquier separador que aparezca en el número ("," "." o espacio) es
+// separador de miles, nunca un punto decimal: "1.000"/"1,000"/"1 000" ka
+// → 1000 (FR-006 original; edge case de kakera de 4+ dígitos con
+// separador de miles).
 function parseKakeraValue(raw: string): number {
-  return Number(raw.replace(/[.,]/g, ''))
+  return Number(raw.replace(/\D/g, ''))
 }
 
 /**
@@ -79,6 +119,9 @@ function normalizeImageUrl(rawUrl: string): string {
 
 export function parseHaremMessage(rawText: string): ParsedHaremMessage {
   const lines = rawText.split(/\r\n|\r|\n/)
+  const characterWithKakera = usesSpaceThousandsSeparator(lines)
+    ? CHARACTER_WITH_SPACED_KAKERA
+    : CHARACTER_WITH_KAKERA
 
   let profileName = ''
   let isFirstContentLine = true
@@ -108,7 +151,7 @@ export function parseHaremMessage(rawText: string): ParsedHaremMessage {
       // de perfil), se toma tal cual como profileName (edge case
       // reportado: "🌸 Patio de Pastra 🌸").
       const looksStructural =
-        SERIES_HEADER.test(line) || CHARACTER_WITH_KAKERA.test(line) || CHARACTER_WITHOUT_KAKERA.test(line)
+        SERIES_HEADER.test(line) || characterWithKakera.test(line) || CHARACTER_WITHOUT_KAKERA.test(line)
       if (!looksStructural) {
         profileName = line
         continue
@@ -123,7 +166,7 @@ export function parseHaremMessage(rawText: string): ParsedHaremMessage {
       continue
     }
 
-    const withKakera = CHARACTER_WITH_KAKERA.exec(line)
+    const withKakera = characterWithKakera.exec(line)
     const characterMatch = withKakera ?? CHARACTER_WITHOUT_KAKERA.exec(line)
     if (characterMatch && currentSeries) {
       const claimRank = characterMatch[1]
