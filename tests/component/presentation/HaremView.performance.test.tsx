@@ -59,10 +59,15 @@ describe('HaremView - escala con harems grandes (Principio III)', () => {
     const elapsedMs = performance.now() - start
 
     // 30 series + 210 personajes = 240 superficies de arrastre (role="button"),
-    // más un botón "copiar nombre" (006) por cada uno de los 210 personajes.
-    expect(getAllByRole('button')).toHaveLength(240 + 210)
+    // más un botón "copiar nombre" (006) y uno "mover a…" (012) por cada
+    // uno de los 210 personajes.
+    expect(getAllByRole('button')).toHaveLength(240 + 210 + 210)
     // Presupuesto generoso (no es una medición de fluidez real, ver nota
     // arriba): detecta una regresión catastrófica (ej. O(n²)), no jank.
     expect(elapsedMs).toBeLessThan(5000)
-  })
+    // Timeout del runner aparte del presupuesto de render: `getAllByRole`
+    // sobre ~660 botones es lento en jsdom por sí solo y, en la corrida
+    // completa en paralelo, hacía fallar el test por timeout aunque el
+    // render entrara holgado en el presupuesto.
+  }, 15000)
 })

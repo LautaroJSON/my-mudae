@@ -1,6 +1,7 @@
 import { memo, type CSSProperties } from "react";
 import type { Character } from "../../../domain/harem/Character";
 import CopyNameButton from "../CopyNameButton";
+import MoveCharacterButton from "../MoveCharacterButton";
 import CharacterName from "../CharacterName";
 import {
   Body,
@@ -16,17 +17,33 @@ interface ICharacterCard {
   character: Character;
   /** Posición dentro de la serie, usada solo para escalonar la animación de entrada. */
   staggerIndex?: number;
+  /**
+   * Abre "Mover a…" para este personaje (012). Sin esta prop no se muestra
+   * el botón (ej. una serie de un solo personaje, que no tiene adónde
+   * moverse). Debe ser una referencia estable para no romper el `memo`.
+   */
+  onRequestMove?: (characterId: string) => void;
 }
 
 // Memoizado por props: con harems de 200+ personajes, mover/actualizar un
 // personaje no debe re-renderizar el resto de la lista (Principio III).
-const CharacterCard = ({ character, staggerIndex = 0 }: ICharacterCard) => {
+const CharacterCard = ({
+  character,
+  staggerIndex = 0,
+  onRequestMove,
+}: ICharacterCard) => {
   return (
     <Card style={{ "--mm-stagger-index": staggerIndex } as CSSProperties}>
       {character.claimRank && (
         <RankBadge data-rank-badge>{character.claimRank}</RankBadge>
       )}
       <CopyNameButton characterName={character.name} />
+      {onRequestMove && (
+        <MoveCharacterButton
+          characterName={character.name}
+          onClick={() => onRequestMove(character.id)}
+        />
+      )}
       <ImageContainer>
         <Image
           src={character.imageUrl}

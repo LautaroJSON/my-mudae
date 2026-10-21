@@ -38,7 +38,9 @@ export const Card = styled.article`
 
   @media (hover: hover) and (pointer: fine) {
     &:hover [data-copy-name-button],
-    &:focus-within [data-copy-name-button] {
+    &:focus-within [data-copy-name-button],
+    &:hover [data-move-character-button],
+    &:focus-within [data-move-character-button] {
       opacity: 1;
       transform: scale(1);
       pointer-events: auto;

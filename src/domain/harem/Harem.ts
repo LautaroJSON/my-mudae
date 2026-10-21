@@ -49,6 +49,104 @@ export function removeCharacterFromSeries(
     )
     .filter((series) => series.characters.length > 0)
 
+  return { ...harem, series: ensurePrincipalBlocks(series) }
+}
+
+/**
+ * Mantiene la invariante de bloques (012): cada `name` presente tiene
+ * exactamente un bloque principal. Si el principal de una serie
+ * desapareció (se vació y se eliminó por FR-022) pero quedan bloques
+ * separados, el primero de ellos — en el orden actual del harem — pasa a
+ * ser el principal. Nunca reordena ni toca personajes.
+ */
+export function ensurePrincipalBlocks(series: Series[]): Series[] {
+  const namesWithPrincipal = new Set(series.filter((block) => !block.detached).map((block) => block.name))
+
+  return series.map((block) => {
+    if (!block.detached || namesWithPrincipal.has(block.name)) {
+      return block
+    }
+    namesWithPrincipal.add(block.name)
+    const principal = { ...block }
+    delete principal.detached
+    return principal
+  })
+}
+
+/**
+ * Todos los bloques (012) de la misma serie que `seriesId`, incluido él
+ * mismo, en el orden del harem. Vacío si `seriesId` no existe.
+ */
+export function getSeriesBlocks(harem: Harem, seriesId: string): Series[] {
+  const block = harem.series.find((series) => series.id === seriesId)
+  if (!block) {
+    return []
+  }
+  return harem.series.filter((series) => series.name === block.name)
+}
+
+/**
+ * Mueve un personaje de su bloque (`fromSeriesId`) a otro bloque de la
+ * MISMA serie (012), al final de ese bloque. Con `targetSeriesId: null`
+ * crea un bloque separado nuevo con solo ese personaje, justo después del
+ * bloque de origen. Un personaje nunca puede terminar en un bloque de
+ * otra serie (FR-005 de 003): un `targetSeriesId` de otra serie, o
+ * desconocido, deja el harem sin cambios. Si el bloque de origen se
+ * queda vacío se elimina (FR-022) y, si era el principal, se promueve
+ * otro (`ensurePrincipalBlocks`).
+ */
+export function moveCharacterToBlock(
+  harem: Harem,
+  fromSeriesId: string,
+  characterId: string,
+  targetSeriesId: string | null,
+): Harem {
+  const source = harem.series.find((series) => series.id === fromSeriesId)
+  const character = source?.characters.find((candidate) => candidate.id === characterId)
+  if (!source || !character || targetSeriesId === fromSeriesId) {
+    return harem
+  }
+
+  const target = targetSeriesId === null ? undefined : harem.series.find((series) => series.id === targetSeriesId)
+  if (targetSeriesId !== null && (!target || target.name !== source.name)) {
+    return harem
+  }
+
+  const series = harem.series.flatMap((block) => {
+    if (block.id === fromSeriesId) {
+      const remaining = { ...block, characters: block.characters.filter((candidate) => candidate.id !== characterId) }
+      if (targetSeriesId !== null) {
+        return [remaining]
+      }
+      const newBlock: Series = { id: crypto.randomUUID(), name: block.name, characters: [character], detached: true }
+      return [remaining, newBlock]
+    }
+    if (block.id === targetSeriesId) {
+      return [{ ...block, characters: [...block.characters, character] }]
+    }
+    return [block]
+  })
+
+  return { ...harem, series: ensurePrincipalBlocks(series.filter((block) => block.characters.length > 0)) }
+}
+
+/**
+ * "Unir a la serie" (012): pasa todos los personajes de un bloque
+ * separado al final del bloque principal de su serie, en su orden, y
+ * elimina el bloque separado. Un `seriesId` desconocido o que ya es el
+ * principal deja el harem sin cambios.
+ */
+export function mergeSeriesBlock(harem: Harem, seriesId: string): Harem {
+  const block = harem.series.find((series) => series.id === seriesId)
+  const principal = block && harem.series.find((series) => series.name === block.name && !series.detached)
+  if (!block || !block.detached || !principal) {
+    return harem
+  }
+
+  const series = harem.series
+    .filter((series) => series.id !== seriesId)
+    .map((series) => (series.id === principal.id ? { ...series, characters: [...series.characters, ...block.characters] } : series))
+
   return { ...harem, series }
 }
 

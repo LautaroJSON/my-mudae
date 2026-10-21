@@ -20,6 +20,17 @@ export const Section = styled.section`
      cuando ni siquiera las tarjetas entran en una fila. */
   width: fit-content;
   max-width: 100%;
+
+  /* "bloque N" y "Unir" de un bloque separado (012): se revelan con
+     hover/foco del bloque, mismo criterio que los botones de
+     CharacterCard — solo con puntero fino; en táctil quedan siempre
+     visibles. */
+  @media (hover: hover) and (pointer: fine) {
+    &:hover [data-block-reveal],
+    &:focus-within [data-block-reveal] {
+      opacity: 1;
+    }
+  }
 `;
 
 export const Header = styled.div`
@@ -44,6 +55,53 @@ export const SeriesName = styled.h2`
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+`;
+
+// "bloque N" de un bloque separado (012): no se trunca (flex-shrink 0),
+// el que cede espacio es SeriesName.
+// Ocupan su lugar aunque estén ocultos (opacity, no display): así
+// revelarlos no cambia el ancho disponible para SeriesName.
+const revealOnHover = `
+  @media (hover: hover) and (pointer: fine) {
+    opacity: 0;
+  }
+`;
+
+export const BlockTag = styled.span`
+  ${revealOnHover}
+  transition: opacity ${(props) => props.theme.motion.duration.base}
+    ${(props) => props.theme.motion.easing};
+  flex-shrink: 0;
+  white-space: nowrap;
+  font-family: ${(props) => props.theme.typography.fontMono};
+  font-size: ${(props) => props.theme.typography.size.xs};
+  color: ${(props) => props.theme.colors.textSecondary};
+`;
+
+export const MergeButton = styled.button`
+  ${revealOnHover}
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-left: auto;
+  background: none;
+  border: none;
+  border-radius: ${(props) => props.theme.radii.sm};
+  color: ${(props) => props.theme.colors.textSecondary};
+  cursor: pointer;
+  padding: ${(props) => props.theme.spacing.xxs};
+  transition: background-color ${(props) => props.theme.motion.duration.fast}
+      ${(props) => props.theme.motion.easing},
+    color ${(props) => props.theme.motion.duration.fast}
+      ${(props) => props.theme.motion.easing},
+    opacity ${(props) => props.theme.motion.duration.base}
+      ${(props) => props.theme.motion.easing};
+
+  &:hover {
+    background: ${(props) => props.theme.colors.background};
+    color: ${(props) => props.theme.colors.accent};
+  }
 `;
 
 // Mismo patrón que ProfileCard/styles.tsx: `touch-action: none` evita

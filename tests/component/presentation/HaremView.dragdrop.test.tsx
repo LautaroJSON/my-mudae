@@ -88,10 +88,13 @@ describe('HaremView - drag-and-drop de series', () => {
     // +1 en cada caso por la manija de arrastre de la propia serie: Amagami
     // arrastra exactamente sus 2 personajes, Black Clover exactamente el
     // suyo — nunca los del otro (cada uno con su propio DndContext).
-    // Excluye el botón de "copiar nombre" de cada tarjeta (006), que
-    // también expone role="button" pero no es superficie de arrastre.
+    // Excluye los botones "copiar nombre" (006) y "mover a…" (012) de cada
+    // tarjeta, que también exponen role="button" pero no son superficie de
+    // arrastre.
     const excludeCopyNameButtons = (buttons: HTMLElement[]) =>
-      buttons.filter((button) => !button.hasAttribute('data-copy-name-button'))
+      buttons.filter(
+        (button) => !button.hasAttribute('data-copy-name-button') && !button.hasAttribute('data-move-character-button'),
+      )
 
     expect(excludeCopyNameButtons(within(amagami).getAllByRole('button'))).toHaveLength(2 + 1)
     expect(excludeCopyNameButtons(within(blackClover).getAllByRole('button'))).toHaveLength(1 + 1)

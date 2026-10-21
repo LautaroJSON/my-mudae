@@ -18,6 +18,8 @@ import { reorderServers as reorderServersUseCase } from '../../application/useCa
 import { reorderProfilesInServer as reorderProfilesInServerUseCase } from '../../application/useCases/reorderProfilesInServer'
 import { reorderCharactersInSeries as reorderCharactersInSeriesUseCase } from '../../application/useCases/reorderCharactersInSeries'
 import { reorderSeries as reorderSeriesUseCase } from '../../application/useCases/reorderSeries'
+import { moveCharacterToBlock as moveCharacterToBlockUseCase } from '../../application/useCases/moveCharacterToBlock'
+import { mergeSeriesBlock as mergeSeriesBlockUseCase } from '../../application/useCases/mergeSeriesBlock'
 import {
   updateActiveProfileHarem as updateActiveProfileHaremUseCase,
   type UpdateActiveProfileHaremOptions,
@@ -88,6 +90,13 @@ export interface IProfilesContext {
   reorderCharactersInSeries: (seriesId: string, orderedCharacterIds: string[]) => void
   /** Reordena las series del harem del perfil activo (User Story 3 de 003). No hace nada si no hay perfil activo. */
   reorderSeries: (orderedSeriesIds: string[]) => void
+  /**
+   * Mueve un personaje a otro bloque de su misma serie, o a un bloque separado nuevo con
+   * `targetSeriesId: null` (012). No hace nada si no hay perfil activo.
+   */
+  moveCharacterToBlock: (fromSeriesId: string, characterId: string, targetSeriesId: string | null) => void
+  /** Une un bloque separado al bloque principal de su serie (012). No hace nada si no hay perfil activo. */
+  mergeSeriesBlock: (seriesId: string) => void
   /**
    * Sobrescribe el harem del perfil activo con un nuevo pegado (User Story 1 de 005).
    * Devuelve `NO_ACTIVE_PROFILE` sin llamar al caso de uso si no hay perfil activo.
@@ -177,6 +186,22 @@ const ProfilesProvider = ({ children, repository, serverRepository }: IProfilesP
     syncFromRepositories()
   }
 
+  const moveCharacterToBlock: IProfilesContext['moveCharacterToBlock'] = (fromSeriesId, characterId, targetSeriesId) => {
+    if (!activeProfile) {
+      return
+    }
+    moveCharacterToBlockUseCase(activeRepository, activeProfile.id, fromSeriesId, characterId, targetSeriesId)
+    syncFromRepositories()
+  }
+
+  const mergeSeriesBlock: IProfilesContext['mergeSeriesBlock'] = (seriesId) => {
+    if (!activeProfile) {
+      return
+    }
+    mergeSeriesBlockUseCase(activeRepository, activeProfile.id, seriesId)
+    syncFromRepositories()
+  }
+
   const updateActiveProfileHarem: IProfilesContext['updateActiveProfileHarem'] = (rawText, options) => {
     if (!activeProfile) {
       return { ok: false, reason: 'NO_ACTIVE_PROFILE' }
@@ -202,6 +227,8 @@ const ProfilesProvider = ({ children, repository, serverRepository }: IProfilesP
     reorderProfilesInServer,
     reorderCharactersInSeries,
     reorderSeries,
+    moveCharacterToBlock,
+    mergeSeriesBlock,
     updateActiveProfileHarem,
   }
 

@@ -55,11 +55,12 @@ describe('SeriesGroup - drag-and-drop de personajes', () => {
     renderSeriesGroup(buildSeries())
 
     const region = screen.getByRole('region', { name: 'Amagami' })
-    // Excluye el botón de "copiar nombre" de cada tarjeta (006), que
-    // también expone role="button" pero no es la superficie de arrastre.
+    // Excluye los botones "copiar nombre" (006) y "mover a…" (012) de cada
+    // tarjeta, que también exponen role="button" pero no son la superficie
+    // de arrastre.
     const cards = within(region)
       .getAllByRole('button')
-      .filter((button) => !button.hasAttribute('data-copy-name-button'))
+      .filter((button) => !button.hasAttribute('data-copy-name-button') && !button.hasAttribute('data-move-character-button'))
 
     expect(cards).toHaveLength(3)
     cards.forEach((card) => expect(card.tabIndex).toBe(0))

@@ -1,10 +1,14 @@
-import type { Harem } from './Harem'
+import { ensurePrincipalBlocks, type Harem } from './Harem'
 import type { Character } from './Character'
 import type { Series } from './Series'
 import type { ParsedSeries } from '../parsing/parseHaremMessage'
 
 function generateId(): string {
   return crypto.randomUUID()
+}
+
+function seriesAndNameKey(seriesName: string, characterName: string): string {
+  return `${seriesName}\u0000${characterName}`
 }
 
 /**
@@ -29,9 +33,10 @@ function stableReorder<T>(items: T[], existingIndexOf: (item: T) => number | und
  * Reconcilia el harem actual de un perfil con lo recién parseado de un
  * segundo pegado del mismo perfil (mismo `id`, User Story 4 de 002,
  * FR-015a/FR-015b). La clave de identidad de "es el mismo personaje
- * reclamado" entre ambos pegados es el **nombre** del personaje (por
- * cola FIFO ante duplicados, ver `existingCharactersByName` más abajo),
- * NO el claim rank (`#N`) — a pesar de lo que decidió research.md de
+ * reclamado" entre ambos pegados es el **nombre** del personaje dentro
+ * de su serie (por cola FIFO ante duplicados; con fallback al nombre
+ * solo si la serie cambió, ver las dos pasadas más abajo), NO el claim
+ * rank (`#N`) — a pesar de lo que decidió research.md de
  * 002. El `#N` de Mudae no identifica una copia puntual reclamada: es
  * el ranking global de claims de ese personaje entre TODOS los
  * usuarios de Mudae, así que cambia con el tiempo aunque el usuario no
@@ -52,10 +57,15 @@ function stableReorder<T>(items: T[], existingIndexOf: (item: T) => number | und
  * - nombre del harem actual que no aparece en el pegado nuevo → se
  *   descarta (no sobrevive en el resultado).
  *
- * Las series se agrupan según el pegado más reciente (conservando el
- * `id` de una serie existente con el mismo nombre); una serie sin
- * personajes no aparece en el resultado (mismo invariante que
- * `removeCharacterFromSeries`, FR-022 de 001).
+ * Bloques (012): un personaje existente vuelve al mismo bloque donde
+ * estaba (principal o separado), así que separar personajes de su serie
+ * sobrevive a las actualizaciones; un personaje nuevo, o uno cuya serie
+ * cambió en el pegado, va al bloque principal de su serie (conservando
+ * su `id`, o uno nuevo si la serie es nueva). Cómo venga agrupado el
+ * pegado (ej. la misma serie dos veces) no crea ni junta bloques. Un
+ * bloque sin personajes no aparece en el resultado (mismo invariante
+ * que `removeCharacterFromSeries`, FR-022 de 001) y, si era el
+ * principal, se promueve otro (`ensurePrincipalBlocks`).
  *
  * El orden final de series, y el de personajes dentro de cada serie
  * existente, respeta la posición que ya tenían en `currentHarem` (la
@@ -66,67 +76,109 @@ function stableReorder<T>(items: T[], existingIndexOf: (item: T) => number | und
  * pegado de Discord.
  */
 export function syncHarem(currentHarem: Harem, parsedSeries: ParsedSeries[]): Harem {
-  const existingCharactersByName = new Map<string, Character[]>()
-  const existingSeriesIdByName = new Map<string, string>()
-  const existingSeriesOrderByName = new Map<string, number>()
+  type ExistingEntry = { character: Character; block: Series }
+
+  const existingBySeriesAndName = new Map<string, ExistingEntry[]>()
+  const existingByName = new Map<string, ExistingEntry[]>()
+  const principalIdByName = new Map<string, string>()
+  const existingSeriesOrderById = new Map<string, number>()
   const existingCharacterOrderById = new Map<string, number>()
 
-  currentHarem.series.forEach((series, seriesIndex) => {
-    existingSeriesIdByName.set(series.name, series.id)
-    existingSeriesOrderByName.set(series.name, seriesIndex)
-    series.characters.forEach((character, characterIndex) => {
+  const pushTo = (map: Map<string, ExistingEntry[]>, key: string, entry: ExistingEntry) => {
+    const queue = map.get(key)
+    if (queue) {
+      queue.push(entry)
+    } else {
+      map.set(key, [entry])
+    }
+  }
+
+  currentHarem.series.forEach((block, blockIndex) => {
+    existingSeriesOrderById.set(block.id, blockIndex)
+    if (!block.detached) {
+      principalIdByName.set(block.name, block.id)
+    }
+    block.characters.forEach((character, characterIndex) => {
       existingCharacterOrderById.set(character.id, characterIndex)
-      const queue = existingCharactersByName.get(character.name)
-      if (queue) {
-        queue.push(character)
-      } else {
-        existingCharactersByName.set(character.name, [character])
-      }
+      const entry = { character, block }
+      pushTo(existingBySeriesAndName, seriesAndNameKey(block.name, character.name), entry)
+      pushTo(existingByName, character.name, entry)
     })
   })
 
-  const seriesByName = new Map<string, Series>()
-
-  for (const parsedSerie of parsedSeries) {
-    const characters: Character[] = parsedSerie.characters.map((parsedCharacter) => {
-      // `.shift()` consume la copia existente más antigua con este
-      // nombre primero, así que ante duplicados (dos copias del mismo
-      // personaje) cada una conserva su propio `id` en el mismo orden
-      // relativo en que ya aparecían, en vez de que ambas colapsen a
-      // una sola identidad.
-      const existing = existingCharactersByName.get(parsedCharacter.name)?.shift()
-
-      return {
-        id: existing?.id ?? generateId(),
-        name: parsedCharacter.name,
-        imageUrl: parsedCharacter.imageUrl,
-        kakera: parsedCharacter.kakera,
-        claimRank: parsedCharacter.claimRank,
-      }
-    })
-
-    const existingEntry = seriesByName.get(parsedSerie.name)
-    if (existingEntry) {
-      existingEntry.characters.push(...characters)
-      continue
+  // Cada copia existente se consume una sola vez, aunque figure en las dos
+  // colas (por serie+nombre y por nombre solo).
+  const consumed = new Set<string>()
+  const takeFrom = (queue: ExistingEntry[] | undefined): ExistingEntry | undefined => {
+    const entry = queue?.find((candidate) => !consumed.has(candidate.character.id))
+    if (entry) {
+      consumed.add(entry.character.id)
     }
-
-    seriesByName.set(parsedSerie.name, {
-      id: existingSeriesIdByName.get(parsedSerie.name) ?? generateId(),
-      name: parsedSerie.name,
-      characters,
-    })
+    return entry
   }
 
-  const series = Array.from(seriesByName.values())
-    .filter((series) => series.characters.length > 0)
-    .map((series) => ({
-      ...series,
-      characters: stableReorder(series.characters, (character) => existingCharacterOrderById.get(character.id)),
+  // Dos pasadas: primero se resuelven TODAS las coincidencias exactas
+  // (misma serie + mismo nombre) y recién después el fallback por nombre
+  // solo, para que un personaje que cambió de serie (ej. Mudae renombró la
+  // serie) no le robe la copia existente a uno que sí coincide exacto.
+  // FIFO (`find` sobre el orden del harem actual) ante duplicados: dos
+  // copias del mismo personaje conservan cada una su propio `id`.
+  const flatParsed = parsedSeries.flatMap((parsedSerie) =>
+    parsedSerie.characters.map((parsedCharacter) => ({ seriesName: parsedSerie.name, parsedCharacter })),
+  )
+  const matches: (ExistingEntry | undefined)[] = flatParsed.map(({ seriesName, parsedCharacter }) =>
+    takeFrom(existingBySeriesAndName.get(seriesAndNameKey(seriesName, parsedCharacter.name))),
+  )
+  flatParsed.forEach(({ parsedCharacter }, index) => {
+    matches[index] ??= takeFrom(existingByName.get(parsedCharacter.name))
+  })
+
+  const blocksById = new Map<string, Series>()
+  const blockFor = (id: string, name: string, detached: boolean): Series => {
+    let block = blocksById.get(id)
+    if (!block) {
+      block = detached ? { id, name, characters: [], detached: true } : { id, name, characters: [] }
+      blocksById.set(id, block)
+    }
+    return block
+  }
+
+  flatParsed.forEach(({ seriesName, parsedCharacter }, index) => {
+    const existing = matches[index]
+    const character: Character = {
+      id: existing?.character.id ?? generateId(),
+      name: parsedCharacter.name,
+      imageUrl: parsedCharacter.imageUrl,
+      kakera: parsedCharacter.kakera,
+      claimRank: parsedCharacter.claimRank,
+    }
+
+    // Un personaje existente vuelve al bloque donde ya estaba (012), salvo
+    // que el pegado lo traiga bajo otra serie; los nuevos van siempre al
+    // bloque principal de su serie, aunque el usuario lo haya movido de
+    // posición o haya bloques separados antes que él.
+    if (existing && existing.block.name === seriesName) {
+      blockFor(existing.block.id, seriesName, Boolean(existing.block.detached)).characters.push(character)
+      return
+    }
+
+    let principalId = principalIdByName.get(seriesName)
+    if (!principalId) {
+      principalId = generateId()
+      principalIdByName.set(seriesName, principalId)
+    }
+    blockFor(principalId, seriesName, false).characters.push(character)
+  })
+
+  const series = Array.from(blocksById.values())
+    .filter((block) => block.characters.length > 0)
+    .map((block) => ({
+      ...block,
+      characters: stableReorder(block.characters, (character) => existingCharacterOrderById.get(character.id)),
     }))
 
   return {
     ...currentHarem,
-    series: stableReorder(series, (oneSeries) => existingSeriesOrderByName.get(oneSeries.name)),
+    series: ensurePrincipalBlocks(stableReorder(series, (block) => existingSeriesOrderById.get(block.id))),
   }
 }
