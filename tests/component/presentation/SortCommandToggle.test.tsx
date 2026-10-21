@@ -68,7 +68,7 @@ describe('SortCommandToggle + SortCommandBar', () => {
 
     await user.click(screen.getByRole('button', { name: /mostrar comando de orden/i }))
 
-    expect(screen.getByDisplayValue('$sm Esdeath $ Falin Touden')).toBeInTheDocument()
+    expect(screen.getByDisplayValue('$sm Esdeath$Falin Touden')).toBeInTheDocument()
   })
 
   it('sin perfil activo, muestra un estado vacío y no un comando "$sm" sin nombres', async () => {
@@ -96,11 +96,11 @@ describe('SortCommandToggle + SortCommandBar', () => {
     renderToggle(new InMemoryProfileRepository([buildProfile()]), true)
 
     await user.click(screen.getByRole('button', { name: /mostrar comando de orden/i }))
-    expect(screen.getByDisplayValue('$sm Esdeath $ Falin Touden')).toBeInTheDocument()
+    expect(screen.getByDisplayValue('$sm Esdeath$Falin Touden')).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: /^reordenar$/i }))
 
-    expect(screen.getByDisplayValue('$sm Falin Touden $ Esdeath')).toBeInTheDocument()
+    expect(screen.getByDisplayValue('$sm Falin Touden$Esdeath')).toBeInTheDocument()
   })
 
   it('vuelve a tocar el ícono para ocultar la barra (aria-expanded vuelve a false)', async () => {
@@ -147,7 +147,7 @@ describe('SortCommandToggle + SortCommandBar', () => {
     it('oculta: transform trasladado fuera de vista y opacity 0', () => {
       renderToggle(new InMemoryProfileRepository([buildProfile()]))
 
-      const panel = screen.getByLabelText('Comando de orden del harem').parentElement as HTMLElement
+      const panel = screen.getByLabelText('Comando de orden del harem').parentElement?.parentElement as HTMLElement
       const styles = getComputedStyle(panel)
 
       expect(styles.transform).not.toBe('none')
@@ -160,7 +160,7 @@ describe('SortCommandToggle + SortCommandBar', () => {
 
       await user.click(screen.getByRole('button', { name: /mostrar comando de orden/i }))
 
-      const panel = screen.getByLabelText('Comando de orden del harem').parentElement as HTMLElement
+      const panel = screen.getByLabelText('Comando de orden del harem').parentElement?.parentElement as HTMLElement
       const styles = getComputedStyle(panel)
 
       expect(styles.transform).toBe('translateY(0)')
@@ -177,7 +177,7 @@ describe('SortCommandToggle + SortCommandBar', () => {
       await user.click(toggle())
 
       expect(toggle()).toHaveAttribute('aria-expanded', 'true')
-      const panel = screen.getByLabelText('Comando de orden del harem').parentElement as HTMLElement
+      const panel = screen.getByLabelText('Comando de orden del harem').parentElement?.parentElement as HTMLElement
       expect(getComputedStyle(panel).opacity).toBe('1')
     })
   })

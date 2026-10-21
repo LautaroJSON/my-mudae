@@ -10,6 +10,10 @@ const FEEDBACK_DURATION_MS = 2500
 
 interface ICopyCommandButton {
   text: string | null
+  /** Nombre accesible (y tooltip) del botón en reposo; por defecto "Copiar Comando". El botón solo muestra el icono. */
+  label?: string
+  /** Se llama tras un copiado exitoso (automático o confirmado a mano). */
+  onCopied?: () => void
 }
 
 /**
@@ -20,7 +24,7 @@ interface ICopyCommandButton {
  * fallback a `ManualCopyDialog` si falla, feedback en el propio botón
  * (ver contracts/copy-command-button-ui.md).
  */
-const CopyCommandButton = ({ text }: ICopyCommandButton) => {
+const CopyCommandButton = ({ text, label = 'Copiar Comando', onCopied }: ICopyCommandButton) => {
   const [feedback, setFeedback] = useState<Feedback>('idle')
   const [manualCopyText, setManualCopyText] = useState<string | null>(null)
   const feedbackTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
@@ -43,25 +47,27 @@ const CopyCommandButton = ({ text }: ICopyCommandButton) => {
     const copied = await copyTextToClipboard(text)
     if (copied) {
       showFeedback('success')
+      onCopied?.()
       return
     }
 
     setManualCopyText(text)
   }
 
-  const label = feedback === 'success' ? '¡Copiado!' : feedback === 'error' ? 'No se pudo copiar' : 'Copiar Comando'
+  const visibleLabel = feedback === 'success' ? '¡Copiado!' : feedback === 'error' ? 'No se pudo copiar' : label
 
   return (
     <>
       <Button
         type="button"
         $feedback={feedback}
+        aria-label={visibleLabel}
+        title={visibleLabel}
         aria-disabled={text === null}
         disabled={text === null}
         onClick={handleCopy}
       >
         {feedback === 'success' ? <Check size={16} aria-hidden="true" /> : feedback === 'error' ? <X size={16} aria-hidden="true" /> : <Copy size={16} aria-hidden="true" />}
-        {label}
       </Button>
       {manualCopyText !== null && (
         <ManualCopyDialog
@@ -69,6 +75,7 @@ const CopyCommandButton = ({ text }: ICopyCommandButton) => {
           onConfirm={() => {
             setManualCopyText(null)
             showFeedback('success')
+            onCopied?.()
           }}
           onClose={() => setManualCopyText(null)}
         />

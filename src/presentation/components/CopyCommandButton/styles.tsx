@@ -16,15 +16,14 @@ export const Button = styled.button<{ $feedback: Feedback }>`
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  gap: ${(props) => props.theme.spacing.xs};
-  padding: ${(props) => props.theme.spacing.sm} ${(props) => props.theme.spacing.lg};
+  /* Solo icono (el texto vive en aria-label/title): botón circular. */
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
   border-radius: ${(props) => props.theme.radii.pill};
   border: none;
   background: ${(props) => feedbackBackground(props.$feedback, props.theme)};
   color: ${(props) => props.theme.colors.onAccent};
-  font-size: ${(props) => props.theme.typography.size.sm};
-  font-weight: ${(props) => props.theme.typography.weight.semibold};
-  white-space: nowrap;
   cursor: pointer;
   transition: background-color ${(props) => props.theme.motion.duration.fast} ${(props) => props.theme.motion.easing};
 

@@ -69,7 +69,7 @@ describe('Integridad del comando $sm con el ordenamiento temporal por kakera act
     )
 
     await user.click(screen.getByRole('button', { name: /mostrar comando de orden/i }))
-    expect(screen.getByDisplayValue('$sm Haruka $ Ai $ Noelle')).toBeInTheDocument()
+    expect(screen.getByDisplayValue('$sm Haruka$Ai$Noelle')).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: /ordenar harem/i }))
     await user.click(screen.getByRole('button', { name: /ordenamiento/i }))
@@ -78,11 +78,11 @@ describe('Integridad del comando $sm con el ordenamiento temporal por kakera act
     // El harem renderizado ya está reordenado por kakera (Black Clover
     // primero), pero el comando sigue siendo el manual.
     expect(screen.getByRole('region', { name: 'Black Clover' })).toBeInTheDocument()
-    expect(screen.getByDisplayValue('$sm Haruka $ Ai $ Noelle')).toBeInTheDocument()
+    expect(screen.getByDisplayValue('$sm Haruka$Ai$Noelle')).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: /valor de kakera/i }))
 
-    expect(screen.getByDisplayValue('$sm Haruka $ Ai $ Noelle')).toBeInTheDocument()
+    expect(screen.getByDisplayValue('$sm Haruka$Ai$Noelle')).toBeInTheDocument()
   })
 })
 
@@ -117,7 +117,7 @@ describe('Integridad del comando $sm con una búsqueda activa (Principio II, 011
     )
 
     await user.click(screen.getByRole('button', { name: /mostrar comando de orden/i }))
-    expect(screen.getByDisplayValue('$sm Haruka $ Ai $ Noelle')).toBeInTheDocument()
+    expect(screen.getByDisplayValue('$sm Haruka$Ai$Noelle')).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: /buscar en el harem/i }))
     await user.type(screen.getByLabelText(/buscar personaje o serie/i), 'Noelle')
@@ -126,10 +126,10 @@ describe('Integridad del comando $sm con una búsqueda activa (Principio II, 011
     // pero el comando sigue enumerando a todo el harem.
     expect(screen.queryByRole('region', { name: 'Amagami' })).not.toBeInTheDocument()
     expect(screen.getByRole('region', { name: 'Black Clover' })).toBeInTheDocument()
-    expect(screen.getByDisplayValue('$sm Haruka $ Ai $ Noelle')).toBeInTheDocument()
+    expect(screen.getByDisplayValue('$sm Haruka$Ai$Noelle')).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: /cerrar buscador/i }))
 
-    expect(screen.getByDisplayValue('$sm Haruka $ Ai $ Noelle')).toBeInTheDocument()
+    expect(screen.getByDisplayValue('$sm Haruka$Ai$Noelle')).toBeInTheDocument()
   })
 })
