@@ -64,18 +64,18 @@ describe('SeriesGroup - apariencia del panel de serie', () => {
     expect(heading.textContent).toBe(LONG_NAME)
   })
 
-  it('CharacterList no se estira para igualar el ancho del panel (align-self: flex-start)', () => {
-    // Causa raíz del bug reportado: sin align-self: flex-start,
-    // CharacterList hereda el align-items: stretch por defecto de
-    // Section y termina reportando (vía ResizeObserver, en index.tsx)
-    // el ancho YA inflado por el título largo, no el ancho real de las
-    // tarjetas — dejando el recorte del nombre sin efecto.
-    renderSeriesGroup(buildSeries())
+  it('el encabezado no aporta ancho al panel (contain: inline-size), así un nombre largo nunca lo ensancha', () => {
+    // El ancho del panel lo definen solo sus tarjetas. Reemplaza a la
+    // medición por JS (ResizeObserver + max-width inline) que dejaba el
+    // título ensanchar la serie si la medición daba 0, y con 2+
+    // personajes medía el ancho ya inflado por el título. jsdom no tiene
+    // layout: el ancho real se valida en un navegador.
+    renderSeriesGroup(buildSeries(LONG_NAME))
 
     const styleText = Array.from(document.querySelectorAll('style'))
       .map((style) => style.textContent ?? '')
       .join('\n')
 
-    expect(styleText).toContain('align-self:flex-start')
+    expect(styleText).toContain('contain:inline-size')
   })
 })

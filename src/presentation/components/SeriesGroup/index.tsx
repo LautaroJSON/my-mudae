@@ -1,4 +1,4 @@
-import { memo, useLayoutEffect, useRef, useState } from "react";
+import { memo, useState } from "react";
 import {
   DndContext,
   KeyboardSensor,
@@ -113,43 +113,6 @@ const SeriesGroup = ({ series, dragHandleProps, dragDisabled }: ISeriesGroup) =>
       : []),
   ];
 
-  // El ancho de la serie lo define CharacterList (sus personajes), no el
-  // nombre: un `<h2>` normal, sin ninguna restricción propia, ensancha
-  // su contenedor con `width: auto/fit-content` hasta el ancho de su
-  // texto sin cortar, incluso si es más largo que las tarjetas de
-  // personajes. Medir el ancho real de CharacterList y aplicarlo como
-  // `max-width` del encabezado hace que el nombre se trunque con "…" en
-  // vez de ensanchar la serie — `max-width` sí acota la contribución de
-  // un elemento al cálculo de ancho intrínseco de su contenedor (a
-  // diferencia de `overflow: hidden` solo, que no lo hace). Requiere
-  // `CharacterList` con `align-self: flex-start` (ver styles.tsx): sin
-  // eso, `CharacterList` se estira para igualar el ancho ya inflado de
-  // `Section` por el título largo, y la medición de acá termina leyendo
-  // ese ancho inflado en vez del ancho real de las tarjetas.
-  const characterListRef = useRef<HTMLDivElement>(null);
-  const [headerMaxWidth, setHeaderMaxWidth] = useState<number>();
-
-  useLayoutEffect(() => {
-    const element = characterListRef.current;
-    if (!element) {
-      return;
-    }
-
-    // Medición sincrónica antes del primer paint (useLayoutEffect, no
-    // useEffect): evita un flash momentáneo del encabezado sin acotar
-    // mientras se espera el primer callback de ResizeObserver.
-    const measure = () =>
-      setHeaderMaxWidth(element.getBoundingClientRect().width);
-    measure();
-
-    if (typeof ResizeObserver === "undefined") {
-      return;
-    }
-    const observer = new ResizeObserver(measure);
-    observer.observe(element);
-    return () => observer.disconnect();
-  }, []);
-
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over) {
@@ -163,7 +126,7 @@ const SeriesGroup = ({ series, dragHandleProps, dragDisabled }: ISeriesGroup) =>
 
   return (
     <Section aria-label={blockLabel}>
-      <Header style={headerMaxWidth ? { maxWidth: headerMaxWidth } : undefined}>
+      <Header>
         {dragHandleProps && (
           <DragHandle
             type="button"
@@ -199,7 +162,6 @@ const SeriesGroup = ({ series, dragHandleProps, dragDisabled }: ISeriesGroup) =>
       >
         <SortableContext items={characterIds} strategy={rectSortingStrategy}>
           <CharacterList
-            ref={characterListRef}
             $widthCant={series.characters.length}
           >
             {series.characters.map((character, index) => (

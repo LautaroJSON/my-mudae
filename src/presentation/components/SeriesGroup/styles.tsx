@@ -13,11 +13,10 @@ export const Section = styled.section`
   padding: ${(props) => props.theme.spacing.md};
   box-sizing: border-box;
   /* Ancho de contenido explícito (no un width implícito de ítem flex):
-     junto con align-self: flex-start en CharacterList (ver abajo), es
-     lo que le permite al panel medir su ancho real contra el ancho de
-     las tarjetas, sin que el encabezado (más largo) lo infle. max-width:
-     100% evita que desborde horizontalmente en mobile (Principio V)
-     cuando ni siquiera las tarjetas entran en una fila. */
+     junto con contain: inline-size en Header (ver abajo), el panel
+     toma el ancho de sus tarjetas, sin que el encabezado (más largo) lo
+     infle. max-width: 100% evita que desborde horizontalmente en mobile
+     (Principio V) cuando ni siquiera las tarjetas entran en una fila. */
   width: fit-content;
   max-width: 100%;
 
@@ -37,10 +36,16 @@ export const Header = styled.div`
   display: flex;
   align-items: center;
   gap: ${(props) => props.theme.spacing.xxs};
-  /* min-width:0 + overflow:hidden: sin esto, un flex item no se achica
-     por debajo del ancho de su contenido aunque tenga max-width (inline,
-     ver index.tsx) -- necesario para que SeriesName pueda truncarse en
-     vez de desbordar el encabezado. */
+  /* El ancho de la serie lo definen sus personajes, nunca el nombre:
+     contain: inline-size hace que el encabezado no aporte nada al
+     ancho intrínseco de Section (width: fit-content), así que un
+     nombre más largo que las tarjetas no ensancha el panel; el
+     encabezado se estira al ancho que dejan las tarjetas y SeriesName
+     se trunca con "…". Antes esto se hacía midiendo CharacterList con
+     JS y aplicando un max-width inline, que fallaba si la medición daba
+     0 (el título volvía a ensanchar la serie) y con 2+ personajes
+     (CharacterList al 100% medía el ancho ya inflado por el título). */
+  contain: inline-size;
   min-width: 0;
   overflow: hidden;
 `;
