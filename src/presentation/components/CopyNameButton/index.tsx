@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type MouseEvent, type PointerEvent } from 
 import { Check, Copy } from 'lucide-react'
 import { copyTextToClipboard } from '../../copyToClipboard'
 import ManualCopyDialog from '../ManualCopyDialog'
+import { useCursorTooltip } from '../../useCursorTooltip'
 import { RoundIconButton } from './styles'
 
 const FEEDBACK_DURATION_MS = 2500
@@ -30,6 +31,7 @@ const CopyNameButton = ({ characterName }: ICopyNameButton) => {
   const [feedback, setFeedback] = useState<'idle' | 'success'>('idle')
   const [manualCopyText, setManualCopyText] = useState<string | null>(null)
   const feedbackTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const { tooltipHandlers, tooltip } = useCursorTooltip(feedback === 'success' ? 'Copiado' : 'Copiar nombre')
 
   useEffect(() => {
     return () => clearTimeout(feedbackTimeoutRef.current)
@@ -63,12 +65,14 @@ const CopyNameButton = ({ characterName }: ICopyNameButton) => {
         type="button"
         data-copy-name-button
         $feedback={feedback}
+        {...tooltipHandlers}
         aria-label={feedback === 'success' ? 'Nombre copiado' : `Copiar nombre de ${characterName}`}
         onPointerDown={stopDragActivation}
         onClick={handleCopy}
       >
         {feedback === 'success' ? <Check size={12} /> : <Copy size={12} />}
       </RoundIconButton>
+      {tooltip}
       {manualCopyText !== null && (
         <ManualCopyDialog
           text={manualCopyText}

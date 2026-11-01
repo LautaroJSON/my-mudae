@@ -40,7 +40,9 @@ export const Card = styled.article`
     &:hover [data-copy-name-button],
     &:focus-within [data-copy-name-button],
     &:hover [data-move-character-button],
-    &:focus-within [data-move-character-button] {
+    &:focus-within [data-move-character-button],
+    &:hover [data-mudae-profile-link],
+    &:focus-within [data-mudae-profile-link] {
       opacity: 1;
       transform: scale(1);
       pointer-events: auto;

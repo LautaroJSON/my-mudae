@@ -2,6 +2,7 @@ import { memo, type CSSProperties } from "react";
 import type { Character } from "../../../domain/harem/Character";
 import CopyNameButton from "../CopyNameButton";
 import MoveCharacterButton from "../MoveCharacterButton";
+import MudaeProfileLink from "../MudaeProfileLink";
 import CharacterName from "../CharacterName";
 import {
   Body,
@@ -44,6 +45,10 @@ const CharacterCard = ({
           onClick={() => onRequestMove(character.id)}
         />
       )}
+      <MudaeProfileLink
+        characterName={character.name}
+        slot={onRequestMove ? 2 : 1}
+      />
       <ImageContainer>
         <Image
           src={character.imageUrl}

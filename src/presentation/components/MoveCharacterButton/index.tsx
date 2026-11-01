@@ -1,5 +1,6 @@
 import type { KeyboardEvent, MouseEvent, PointerEvent } from 'react'
 import { ArrowRightLeft } from 'lucide-react'
+import { useCursorTooltip } from '../../useCursorTooltip'
 import { RoundIconButton } from './styles'
 
 interface IMoveCharacterButton {
@@ -18,6 +19,8 @@ interface IMoveCharacterButton {
  * arrastre en vez de un click.
  */
 const MoveCharacterButton = ({ characterName, onClick }: IMoveCharacterButton) => {
+  const { tooltipHandlers, tooltip } = useCursorTooltip('Desacoplar')
+
   const stopDragActivation = (
     event: PointerEvent<HTMLButtonElement> | MouseEvent<HTMLButtonElement> | KeyboardEvent<HTMLButtonElement>,
   ) => {
@@ -25,19 +28,23 @@ const MoveCharacterButton = ({ characterName, onClick }: IMoveCharacterButton) =
   }
 
   return (
-    <RoundIconButton
-      type="button"
-      data-move-character-button
-      aria-label={`Mover ${characterName} a otro bloque`}
-      onPointerDown={stopDragActivation}
-      onKeyDown={stopDragActivation}
-      onClick={(event) => {
-        stopDragActivation(event)
-        onClick()
-      }}
-    >
-      <ArrowRightLeft size={12} />
-    </RoundIconButton>
+    <>
+      <RoundIconButton
+        type="button"
+        data-move-character-button
+        {...tooltipHandlers}
+        aria-label={`Mover ${characterName} a otro bloque`}
+        onPointerDown={stopDragActivation}
+        onKeyDown={stopDragActivation}
+        onClick={(event) => {
+          stopDragActivation(event)
+          onClick()
+        }}
+      >
+        <ArrowRightLeft size={12} />
+      </RoundIconButton>
+      {tooltip}
+    </>
   )
 }
 
