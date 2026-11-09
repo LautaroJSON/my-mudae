@@ -1,5 +1,10 @@
 import styled, { keyframes } from "styled-components";
 
+// Ancho de la tarjeta: lo usa también SeriesGroup para calcular el largo
+// de un bloque achicado (013), así que vive en un solo lugar.
+export const CARD_WIDTH = "144px";
+export const CARD_WIDTH_MOBILE = "72px";
+
 const fadeInUp = keyframes`
   from {
     opacity: 0;
@@ -17,7 +22,7 @@ export const Card = styled.article`
   grid-template-rows: 224px auto;
 
   /* height: 300px; */
-  width: 144px;
+  width: ${CARD_WIDTH};
   border: 1px solid ${(props) => props.theme.colors.border};
   border-radius: ${(props) => props.theme.radii.md};
   overflow: hidden;
@@ -63,7 +68,7 @@ export const Card = styled.article`
   // acá abajo.
   @media (max-width: ${(props) => props.theme.breakpoints.sm}) {
     grid-template-rows: 112px auto;
-    width: 72px;
+    width: ${CARD_WIDTH_MOBILE};
     height: auto;
   }
 `;

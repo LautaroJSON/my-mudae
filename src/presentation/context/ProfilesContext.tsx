@@ -20,6 +20,7 @@ import { reorderCharactersInSeries as reorderCharactersInSeriesUseCase } from '.
 import { reorderSeries as reorderSeriesUseCase } from '../../application/useCases/reorderSeries'
 import { moveCharacterToBlock as moveCharacterToBlockUseCase } from '../../application/useCases/moveCharacterToBlock'
 import { mergeSeriesBlock as mergeSeriesBlockUseCase } from '../../application/useCases/mergeSeriesBlock'
+import { setSeriesVisibleCount as setSeriesVisibleCountUseCase } from '../../application/useCases/setSeriesVisibleCount'
 import {
   updateActiveProfileHarem as updateActiveProfileHaremUseCase,
   type UpdateActiveProfileHaremOptions,
@@ -97,6 +98,11 @@ export interface IProfilesContext {
   moveCharacterToBlock: (fromSeriesId: string, characterId: string, targetSeriesId: string | null) => void
   /** Une un bloque separado al bloque principal de su serie (012). No hace nada si no hay perfil activo. */
   mergeSeriesBlock: (seriesId: string) => void
+  /**
+   * Fija cuántos personajes muestra a lo ancho un bloque antes de pasar a scroll
+   * (013); `null` lo devuelve al ancho completo. No hace nada si no hay perfil activo.
+   */
+  setSeriesVisibleCount: (seriesId: string, visibleCount: number | null) => void
   /**
    * Sobrescribe el harem del perfil activo con un nuevo pegado (User Story 1 de 005).
    * Devuelve `NO_ACTIVE_PROFILE` sin llamar al caso de uso si no hay perfil activo.
@@ -202,6 +208,14 @@ const ProfilesProvider = ({ children, repository, serverRepository }: IProfilesP
     syncFromRepositories()
   }
 
+  const setSeriesVisibleCount: IProfilesContext['setSeriesVisibleCount'] = (seriesId, visibleCount) => {
+    if (!activeProfile) {
+      return
+    }
+    setSeriesVisibleCountUseCase(activeRepository, activeProfile.id, seriesId, visibleCount)
+    syncFromRepositories()
+  }
+
   const updateActiveProfileHarem: IProfilesContext['updateActiveProfileHarem'] = (rawText, options) => {
     if (!activeProfile) {
       return { ok: false, reason: 'NO_ACTIVE_PROFILE' }
@@ -229,6 +243,7 @@ const ProfilesProvider = ({ children, repository, serverRepository }: IProfilesP
     reorderSeries,
     moveCharacterToBlock,
     mergeSeriesBlock,
+    setSeriesVisibleCount,
     updateActiveProfileHarem,
   }
 

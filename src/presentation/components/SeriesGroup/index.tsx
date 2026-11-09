@@ -1,4 +1,4 @@
-import { memo, useState } from "react";
+import { memo, useRef, useState } from "react";
 import {
   DndContext,
   KeyboardSensor,
@@ -23,6 +23,7 @@ import { computeReorderedIds } from "../../computeReorderedIds";
 import { getBlockLabel, getBlockNumber } from "../../seriesBlockLabel";
 import CharacterListItem from "../CharacterListItem";
 import MoveCharacterDialog, { type IMoveTarget } from "../MoveCharacterDialog";
+import SeriesWidthHandle from "../SeriesWidthHandle";
 import {
   BlockTag,
   CharacterList,
@@ -60,6 +61,11 @@ interface ISeriesGroup {
  * la búsqueda u ordenada por kakera), así que las opciones y los nombres
  * de bloque no cambian con esas vistas temporales. El bloque separado
  * muestra su número ("bloque 2") y el botón "Unir a la serie".
+ *
+ * Largo ajustable (013): `SeriesWidthHandle`, en el borde derecho, fija
+ * cuántos personajes se ven a lo ancho (mínimo 1); el resto queda detrás
+ * del scroll horizontal de `CharacterList`. Se oculta en las vistas
+ * temporales (búsqueda/kakera), igual que el arrastre.
  */
 const SeriesGroup = ({ series, dragHandleProps, dragDisabled }: ISeriesGroup) => {
   const {
@@ -67,10 +73,15 @@ const SeriesGroup = ({ series, dragHandleProps, dragDisabled }: ISeriesGroup) =>
     reorderCharactersInSeries,
     moveCharacterToBlock,
     mergeSeriesBlock,
+    setSeriesVisibleCount,
   } = useProfiles();
   const [movingCharacterId, setMovingCharacterId] = useState<string | null>(
     null,
   );
+  // Vista previa del largo mientras se arrastra la manija (013): no se
+  // persiste hasta soltar.
+  const [previewCount, setPreviewCount] = useState<number | null>(null);
+  const listRef = useRef<HTMLDivElement>(null);
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
@@ -112,6 +123,13 @@ const SeriesGroup = ({ series, dragHandleProps, dragDisabled }: ISeriesGroup) =>
       ? [{ seriesId: null, label: "Bloque nuevo" }]
       : []),
   ];
+
+  // Largo del bloque (013): el guardado vive en el bloque REAL; en vistas
+  // temporales (búsqueda/kakera) se acota a los personajes que se ven.
+  const shownCount = series.characters.length;
+  const requestedCount = previewCount ?? realBlock.visibleCount;
+  const visibleCount =
+    requestedCount !== undefined ? Math.min(requestedCount, shownCount) : shownCount;
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -161,9 +179,7 @@ const SeriesGroup = ({ series, dragHandleProps, dragDisabled }: ISeriesGroup) =>
         onDragEnd={handleDragEnd}
       >
         <SortableContext items={characterIds} strategy={rectSortingStrategy}>
-          <CharacterList
-            $widthCant={series.characters.length}
-          >
+          <CharacterList ref={listRef} $visibleCount={visibleCount}>
             {series.characters.map((character, index) => (
               // Cascada de entrada acotada a 12 pasos (DESIGN.md § Motion): con
               // harems de 200+, un delay sin techo haría que las últimas
@@ -179,6 +195,16 @@ const SeriesGroup = ({ series, dragHandleProps, dragDisabled }: ISeriesGroup) =>
           </CharacterList>
         </SortableContext>
       </DndContext>
+      {shownCount >= 2 && !dragDisabled && (
+        <SeriesWidthHandle
+          listRef={listRef}
+          total={shownCount}
+          visible={visibleCount}
+          blockLabel={blockLabel}
+          onPreview={setPreviewCount}
+          onCommit={(count) => setSeriesVisibleCount(series.id, count)}
+        />
+      )}
       {movingCharacter && (
         <MoveCharacterDialog
           characterName={movingCharacter.name}

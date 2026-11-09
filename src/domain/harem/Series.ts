@@ -19,4 +19,12 @@ export interface Series {
   characters: Character[]
   /** `true` si es un bloque separado a mano del bloque principal de su serie (012). */
   detached?: boolean
+  /**
+   * Cantidad de personajes que el bloque muestra a lo ancho antes de
+   * pasar a scroll horizontal (013). Ausente = ancho completo. Se guarda
+   * en personajes y no en píxeles para que valga igual en escritorio y
+   * mobile (la tarjeta cambia de ancho). Siempre entre 1 y
+   * `characters.length - 1`: ver `setSeriesVisibleCount` en Harem.ts.
+   */
+  visibleCount?: number
 }

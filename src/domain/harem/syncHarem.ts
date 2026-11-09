@@ -133,11 +133,24 @@ export function syncHarem(currentHarem: Harem, parsedSeries: ParsedSeries[]): Ha
     matches[index] ??= takeFrom(existingByName.get(parsedCharacter.name))
   })
 
+  // El ancho elegido por el usuario (013) sobrevive al re-pegado: se
+  // copia del bloque existente con el mismo id.
+  const visibleCountById = new Map<string, number>()
+  currentHarem.series.forEach((block) => {
+    if (block.visibleCount !== undefined) {
+      visibleCountById.set(block.id, block.visibleCount)
+    }
+  })
+
   const blocksById = new Map<string, Series>()
   const blockFor = (id: string, name: string, detached: boolean): Series => {
     let block = blocksById.get(id)
     if (!block) {
       block = detached ? { id, name, characters: [], detached: true } : { id, name, characters: [] }
+      const visibleCount = visibleCountById.get(id)
+      if (visibleCount !== undefined) {
+        block.visibleCount = visibleCount
+      }
       blocksById.set(id, block)
     }
     return block
@@ -172,10 +185,18 @@ export function syncHarem(currentHarem: Harem, parsedSeries: ParsedSeries[]): Ha
 
   const series = Array.from(blocksById.values())
     .filter((block) => block.characters.length > 0)
-    .map((block) => ({
-      ...block,
-      characters: stableReorder(block.characters, (character) => existingCharacterOrderById.get(character.id)),
-    }))
+    .map((block) => {
+      const reordered = {
+        ...block,
+        characters: stableReorder(block.characters, (character) => existingCharacterOrderById.get(character.id)),
+      }
+      // Si el bloque perdió personajes, el ancho guardado puede haber
+      // quedado igual o mayor que el total: en ese caso ya no aplica.
+      if (reordered.visibleCount !== undefined && reordered.visibleCount >= reordered.characters.length) {
+        delete reordered.visibleCount
+      }
+      return reordered
+    })
 
   return {
     ...currentHarem,

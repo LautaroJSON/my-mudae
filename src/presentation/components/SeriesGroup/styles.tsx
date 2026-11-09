@@ -1,4 +1,5 @@
 import styled from "styled-components";
+import { CARD_WIDTH, CARD_WIDTH_MOBILE } from "../CharacterCard/styles";
 
 export const Section = styled.section`
   display: flex;
@@ -19,6 +20,8 @@ export const Section = styled.section`
      (Principio V) cuando ni siquiera las tarjetas entran en una fila. */
   width: fit-content;
   max-width: 100%;
+  /* Referencia de posición de SeriesWidthHandle (013). */
+  position: relative;
 
   /* "bloque N" y "Unir" de un bloque separado (012): se revelan con
      hover/foco del bloque, mismo criterio que los botones de
@@ -131,36 +134,37 @@ export const DragHandle = styled.button`
   }
 `;
 
-export const CharacterList = styled.div<{ $widthCant?: number }>`
+// Ancho de `n` tarjetas más los `n - 1` gaps entre ellas.
+const widthFor = (count: number, cardWidth: string, gap: string) =>
+  `calc(${count} * ${cardWidth} + ${count - 1} * ${gap})`;
+
+/*
+ * `$visibleCount` = personajes que se ven a lo ancho (013). Si es menor
+ * que la cantidad de tarjetas, el resto queda detrás del scroll
+ * horizontal. Se calcula en CSS (no midiendo con JS) para que el mismo
+ * número valga con la tarjeta de escritorio y la de mobile. Con un solo
+ * personaje, `$visibleCount` es 1 y el bloque mide una tarjeta, como
+ * antes.
+ */
+export const CharacterList = styled.div<{ $visibleCount: number }>`
   display: flex;
   flex-wrap: nowrap;
-  /* justify-content: center; */
-  /* align-self: flex-start; */
-  /* align-items: flex-start; */
-
   overflow-x: auto;
   overflow-y: hidden;
-
-  /* height: 310px; */
-
   width: ${(props) =>
-    props.$widthCant ? (props.$widthCant === 1 ? "144px" : "100%") : "100%"};
-  /* max-width: 925px; */
-
+    widthFor(props.$visibleCount, CARD_WIDTH, props.theme.spacing.md)};
+  max-width: 100%;
   gap: ${(props) => props.theme.spacing.md};
 
   // Mobile: las CharacterCard pasan a ~72px de ancho y alto intrínseco
-  // (ver CharacterCard/styles.tsx) — sin este ajuste, el alto fijo de
-  // 325px (pensado para la card de 300px de desktop + margen de
-  // scrollbar) dejaría un espacio vacío grande debajo de las tarjetas
-  // achicadas. El alto pasa a auto: es seguro en mobile porque los
-  // navegadores táctiles usan scrollbars superpuestas que no reservan
-  // alto de layout. El gap también baja, proporcional al ancho de card
-  // reducido.
+  // (ver CharacterCard/styles.tsx). El alto pasa a auto: es seguro en
+  // mobile porque los navegadores táctiles usan scrollbars superpuestas
+  // que no reservan alto de layout. El gap también baja, proporcional al
+  // ancho de card reducido.
   @media (max-width: ${(props) => props.theme.breakpoints.sm}) {
     height: auto;
     gap: ${(props) => props.theme.spacing.sm};
     width: ${(props) =>
-      props.$widthCant ? (props.$widthCant === 1 ? "72px" : "100%") : "100%"};
+      widthFor(props.$visibleCount, CARD_WIDTH_MOBILE, props.theme.spacing.sm)};
   }
 `;

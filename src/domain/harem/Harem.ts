@@ -151,6 +151,36 @@ export function mergeSeriesBlock(harem: Harem, seriesId: string): Harem {
 }
 
 /**
+ * Ajusta cuántos personajes muestra a lo ancho un bloque (013). El valor
+ * se acota a `[1, characters.length]`; `null` o un valor que alcanza a
+ * todos los personajes borra el campo (el bloque vuelve a su ancho
+ * natural). Devuelve el mismo `harem` si nada cambia, para no disparar
+ * un guardado ni re-render inútiles.
+ */
+export function setSeriesVisibleCount(harem: Harem, seriesId: string, visibleCount: number | null): Harem {
+  const target = harem.series.find((series) => series.id === seriesId)
+  if (!target) {
+    return harem
+  }
+
+  const total = target.characters.length
+  const clamped = visibleCount === null ? null : Math.max(1, Math.min(total, Math.round(visibleCount)))
+  const next = clamped === null || clamped >= total ? undefined : clamped
+  if (next === target.visibleCount) {
+    return harem
+  }
+
+  const series = harem.series.map((series) => {
+    if (series.id !== seriesId) {
+      return series
+    }
+    const { visibleCount: _previous, ...rest } = series
+    return next === undefined ? rest : { ...rest, visibleCount: next }
+  })
+  return { ...harem, series }
+}
+
+/**
  * Cantidad total de personajes del harem, sumando todas sus series
  * (User Story 3 de 002). Se calcula en el momento a partir de los
  * personajes ya guardados — nunca se persiste aparte (research.md de
