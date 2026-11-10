@@ -11,10 +11,9 @@ import {
   Image,
   ImageContainer,
   Kakera,
-  MarkedTag,
   RankBadge,
 } from "./styles";
-import { GemIcon, Trash2 } from "lucide-react";
+import { GemIcon } from "lucide-react";
 
 interface ICharacterCard {
   character: Character;
@@ -75,11 +74,6 @@ const CharacterCard = ({
           slot={profileSlot + 1}
           onClick={() => onToggleDivorce(character.id)}
         />
-      )}
-      {isMarked && (
-        <MarkedTag aria-hidden="true">
-          <Trash2 size={12} strokeWidth={2.5} />a divorciar
-        </MarkedTag>
       )}
       <ImageContainer>
         <Image

@@ -134,32 +134,6 @@ export const RankBadge = styled.span`
   }
 `;
 
-// Etiqueta centrada al pie de la imagen de una tarjeta marcada (014),
-// debajo de la pila de botones. En mobile no entra: alcanzan el borde
-// rojo y la imagen apagada.
-export const MarkedTag = styled.span`
-  position: absolute;
-  top: 188px;
-  left: 50%;
-  z-index: 1;
-  display: inline-flex;
-  align-items: center;
-  gap: ${(props) => props.theme.spacing.xxs};
-  padding: ${(props) => props.theme.spacing.xxs} ${(props) => props.theme.spacing.sm};
-  border-radius: ${(props) => props.theme.radii.pill};
-  background: ${(props) => props.theme.colors.danger};
-  color: ${(props) => props.theme.colors.onAccent};
-  font-size: ${(props) => props.theme.typography.size.xs};
-  font-weight: ${(props) => props.theme.typography.weight.semibold};
-  white-space: nowrap;
-  transform: translateX(-50%);
-  pointer-events: none;
-
-  @media (max-width: ${(props) => props.theme.breakpoints.sm}) {
-    display: none;
-  }
-`;
-
 export const Kakera = styled.span`
   font-size: ${(props) => props.theme.typography.size.xs};
   font-family: ${(props) => props.theme.typography.fontMono};
