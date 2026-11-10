@@ -53,6 +53,38 @@ export function removeCharacterFromSeries(
 }
 
 /**
+ * Quita del harem a todos los personajes de `characterIds` (014: los que
+ * el usuario ya divorció en Discord), estén en el bloque que estén. Igual
+ * que `removeCharacterFromSeries`: los bloques que quedan vacíos se
+ * eliminan (FR-022) y se promueve un principal si hace falta. Un
+ * `visibleCount` (013) que ya alcanza a todos los personajes que quedan
+ * se borra, para respetar su invariante. Ids desconocidos se ignoran; si
+ * ninguno coincide devuelve el mismo `harem`.
+ */
+export function removeCharacters(harem: Harem, characterIds: Iterable<string>): Harem {
+  const toRemove = new Set(characterIds)
+  const affected = harem.series.some((series) => series.characters.some((character) => toRemove.has(character.id)))
+  if (!affected) {
+    return harem
+  }
+
+  const series = harem.series
+    .map((block) => {
+      const characters = block.characters.filter((character) => !toRemove.has(character.id))
+      if (characters.length === block.characters.length) {
+        return block
+      }
+      const { visibleCount, ...rest } = block
+      return visibleCount !== undefined && visibleCount < characters.length
+        ? { ...rest, characters, visibleCount }
+        : { ...rest, characters }
+    })
+    .filter((block) => block.characters.length > 0)
+
+  return { ...harem, series: ensurePrincipalBlocks(series) }
+}
+
+/**
  * Mantiene la invariante de bloques (012): cada `name` presente tiene
  * exactamente un bloque principal. Si el principal de una serie
  * desapareció (se vació y se eliminó por FR-022) pero quedan bloques

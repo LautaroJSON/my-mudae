@@ -32,14 +32,24 @@ export type DiscordMessageLimit = (typeof DISCORD_MESSAGE_LIMITS)[number]
  */
 export function formatSortCommands(harem: Harem, maxLength: number): string[] {
   const names = harem.series.flatMap((series) => series.characters.map((character) => character.name))
+  return splitNamesIntoCommands(SORT_COMMAND_PREFIX, names, maxLength).reverse()
+}
 
+/**
+ * Arma comandos `<prefijo><nombre>$<nombre>$...` sin pasarse de
+ * `maxLength` y sin cortar ningún nombre, en el orden de `names`. Un
+ * nombre que solo ya excede el límite va en su propio comando en vez de
+ * perderse. Devuelve `[]` si no hay nombres. Lo comparten `$sm` y
+ * `$divorce` (014).
+ */
+export function splitNamesIntoCommands(prefix: string, names: string[], maxLength: number): string[] {
   const commands: string[] = []
   let current = ''
   for (const name of names) {
-    const candidate = current ? `${current}${NAME_SEPARATOR}${name}` : `${SORT_COMMAND_PREFIX}${name}`
+    const candidate = current ? `${current}${NAME_SEPARATOR}${name}` : `${prefix}${name}`
     if (current && candidate.length > maxLength) {
       commands.push(current)
-      current = `${SORT_COMMAND_PREFIX}${name}`
+      current = `${prefix}${name}`
     } else {
       current = candidate
     }
@@ -47,6 +57,5 @@ export function formatSortCommands(harem: Harem, maxLength: number): string[] {
   if (current) {
     commands.push(current)
   }
-
-  return commands.reverse()
+  return commands
 }

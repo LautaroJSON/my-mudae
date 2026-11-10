@@ -3,6 +3,7 @@ import type { Character } from "../../../domain/harem/Character";
 import CopyNameButton from "../CopyNameButton";
 import MoveCharacterButton from "../MoveCharacterButton";
 import MudaeProfileLink from "../MudaeProfileLink";
+import DivorceCharacterButton from "../DivorceCharacterButton";
 import CharacterName from "../CharacterName";
 import {
   Body,
@@ -10,9 +11,10 @@ import {
   Image,
   ImageContainer,
   Kakera,
+  MarkedTag,
   RankBadge,
 } from "./styles";
-import { GemIcon } from "lucide-react";
+import { GemIcon, Trash2 } from "lucide-react";
 
 interface ICharacterCard {
   character: Character;
@@ -24,6 +26,13 @@ interface ICharacterCard {
    * moverse). Debe ser una referencia estable para no romper el `memo`.
    */
   onRequestMove?: (characterId: string) => void;
+  /** Marcado para divorciar (014). */
+  isMarked?: boolean;
+  /**
+   * Marca/desmarca para divorciar (014). Sin esta prop no se muestra el
+   * tacho. Debe ser una referencia estable para no romper el `memo`.
+   */
+  onToggleDivorce?: (characterId: string) => void;
 }
 
 // Memoizado por props: con harems de 200+ personajes, mover/actualizar un
@@ -32,9 +41,22 @@ const CharacterCard = ({
   character,
   staggerIndex = 0,
   onRequestMove,
+  isMarked = false,
+  onToggleDivorce,
 }: ICharacterCard) => {
+  const profileSlot = onRequestMove ? 2 : 1;
+  // Marcada, toda la tarjeta desmarca al tocarla (CharacterListItem le
+  // apaga el arrastre mientras tanto, así el click llega).
+  const handleCardClick =
+    isMarked && onToggleDivorce ? () => onToggleDivorce(character.id) : undefined;
+
   return (
-    <Card style={{ "--mm-stagger-index": staggerIndex } as CSSProperties}>
+    <Card
+      style={{ "--mm-stagger-index": staggerIndex } as CSSProperties}
+      $isMarked={isMarked}
+      onClick={handleCardClick}
+      title={isMarked ? "Tocá para no divorciar" : undefined}
+    >
       {character.claimRank && (
         <RankBadge data-rank-badge>{character.claimRank}</RankBadge>
       )}
@@ -45,10 +67,20 @@ const CharacterCard = ({
           onClick={() => onRequestMove(character.id)}
         />
       )}
-      <MudaeProfileLink
-        characterName={character.name}
-        slot={onRequestMove ? 2 : 1}
-      />
+      <MudaeProfileLink characterName={character.name} slot={profileSlot} />
+      {onToggleDivorce && (
+        <DivorceCharacterButton
+          characterName={character.name}
+          isMarked={isMarked}
+          slot={profileSlot + 1}
+          onClick={() => onToggleDivorce(character.id)}
+        />
+      )}
+      {isMarked && (
+        <MarkedTag aria-hidden="true">
+          <Trash2 size={12} strokeWidth={2.5} />a divorciar
+        </MarkedTag>
+      )}
       <ImageContainer>
         <Image
           src={character.imageUrl}

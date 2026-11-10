@@ -3,6 +3,7 @@ import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import type { Character } from '../../../domain/harem/Character'
 import CharacterCard from '../CharacterCard'
+import { useDivorceSelection } from '../../context/DivorceSelectionContext'
 import { Item } from './styles'
 
 interface ICharacterListItem {
@@ -38,9 +39,14 @@ interface ICharacterListItem {
  * `@dnd-kit`).
  */
 const CharacterListItem = ({ character, staggerIndex, dragDisabled, onRequestMove }: ICharacterListItem) => {
+  // Divorciar (014): una tarjeta marcada no se arrastra, así un click
+  // sobre ella llega a CharacterCard y la desmarca (el PointerSensor sin
+  // activationConstraint se tragaría el click).
+  const divorce = useDivorceSelection()
+  const isMarked = divorce?.isSelected(character.id) ?? false
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: character.id,
-    disabled: dragDisabled,
+    disabled: dragDisabled || isMarked,
   })
 
   const style: CSSProperties = {
@@ -51,7 +57,13 @@ const CharacterListItem = ({ character, staggerIndex, dragDisabled, onRequestMov
 
   return (
     <Item ref={setNodeRef} style={style} {...attributes} {...listeners}>
-      <CharacterCard character={character} staggerIndex={staggerIndex} onRequestMove={onRequestMove} />
+      <CharacterCard
+        character={character}
+        staggerIndex={staggerIndex}
+        onRequestMove={onRequestMove}
+        isMarked={isMarked}
+        onToggleDivorce={divorce?.toggle}
+      />
     </Item>
   )
 }

@@ -2,10 +2,12 @@ import { ThemeProvider } from 'styled-components'
 import ProfilesProvider, { useProfiles } from './context/ProfilesContext'
 import HaremSortProvider from './context/HaremSortContext'
 import HaremSearchProvider from './context/HaremSearchContext'
+import DivorceSelectionProvider from './context/DivorceSelectionContext'
 import Header from './components/Header'
 import HaremView from './components/HaremView'
 import SettingsFab from './components/SettingsFab'
 import SortCommandToggle from './components/SortCommandToggle'
+import DivorceBar from './components/DivorceBar'
 import BackToTopButton from './components/BackToTopButton'
 import GlobalStyle from './GlobalStyle'
 import { EmptyState } from './AppStyles'
@@ -27,6 +29,7 @@ const AppContent = () => {
       <Header />
       <SettingsFab />
       <SortCommandToggle />
+      <DivorceBar />
       <BackToTopButton />
       {urlProfileStatus === 'not-found' ? (
         <EmptyState role="alert">
@@ -51,7 +54,9 @@ const App = () => {
       <ProfilesProvider>
         <HaremSortProvider>
           <HaremSearchProvider>
-            <AppContent />
+            <DivorceSelectionProvider>
+              <AppContent />
+            </DivorceSelectionProvider>
           </HaremSearchProvider>
         </HaremSortProvider>
       </ProfilesProvider>

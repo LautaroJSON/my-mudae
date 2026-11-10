@@ -16,7 +16,7 @@ const fadeInUp = keyframes`
   }
 `;
 
-export const Card = styled.article`
+export const Card = styled.article<{ $isMarked?: boolean }>`
   position: relative;
   display: grid;
   grid-template-rows: 224px auto;
@@ -35,8 +35,21 @@ export const Card = styled.article`
   );
   transition: all 0.8s ${(props) => props.theme.motion.easing};
 
+  /* Marcada para divorciar (014): borde rojo e imagen apagada. */
+  ${(props) =>
+    props.$isMarked &&
+    `
+    border-color: ${props.theme.colors.danger};
+    cursor: pointer;
+
+    & img {
+      filter: grayscale(0.85) brightness(0.55);
+    }
+  `}
+
   &:hover {
-    border-color: ${(props) => props.theme.colors.accent};
+    border-color: ${(props) =>
+      props.$isMarked ? props.theme.colors.danger : props.theme.colors.accent};
     box-shadow: ${(props) => props.theme.colors.shadowLg};
     transform: translateY(1px) scale(1.1em);
   }
@@ -47,7 +60,9 @@ export const Card = styled.article`
     &:hover [data-move-character-button],
     &:focus-within [data-move-character-button],
     &:hover [data-mudae-profile-link],
-    &:focus-within [data-mudae-profile-link] {
+    &:focus-within [data-mudae-profile-link],
+    &:hover [data-divorce-character-button],
+    &:focus-within [data-divorce-character-button] {
       opacity: 1;
       transform: scale(1);
       pointer-events: auto;
@@ -116,6 +131,32 @@ export const RankBadge = styled.span`
         ${(props) => props.theme.motion.easing},
       transform ${(props) => props.theme.motion.duration.base}
         ${(props) => props.theme.motion.easing};
+  }
+`;
+
+// Etiqueta centrada al pie de la imagen de una tarjeta marcada (014),
+// debajo de la pila de botones. En mobile no entra: alcanzan el borde
+// rojo y la imagen apagada.
+export const MarkedTag = styled.span`
+  position: absolute;
+  top: 188px;
+  left: 50%;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: ${(props) => props.theme.spacing.xxs};
+  padding: ${(props) => props.theme.spacing.xxs} ${(props) => props.theme.spacing.sm};
+  border-radius: ${(props) => props.theme.radii.pill};
+  background: ${(props) => props.theme.colors.danger};
+  color: ${(props) => props.theme.colors.onAccent};
+  font-size: ${(props) => props.theme.typography.size.xs};
+  font-weight: ${(props) => props.theme.typography.weight.semibold};
+  white-space: nowrap;
+  transform: translateX(-50%);
+  pointer-events: none;
+
+  @media (max-width: ${(props) => props.theme.breakpoints.sm}) {
+    display: none;
   }
 `;
 

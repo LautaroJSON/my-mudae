@@ -21,6 +21,7 @@ import { reorderSeries as reorderSeriesUseCase } from '../../application/useCase
 import { moveCharacterToBlock as moveCharacterToBlockUseCase } from '../../application/useCases/moveCharacterToBlock'
 import { mergeSeriesBlock as mergeSeriesBlockUseCase } from '../../application/useCases/mergeSeriesBlock'
 import { setSeriesVisibleCount as setSeriesVisibleCountUseCase } from '../../application/useCases/setSeriesVisibleCount'
+import { removeCharacters as removeCharactersUseCase } from '../../application/useCases/removeCharacters'
 import {
   updateActiveProfileHarem as updateActiveProfileHaremUseCase,
   type UpdateActiveProfileHaremOptions,
@@ -103,6 +104,8 @@ export interface IProfilesContext {
    * (013); `null` lo devuelve al ancho completo. No hace nada si no hay perfil activo.
    */
   setSeriesVisibleCount: (seriesId: string, visibleCount: number | null) => void
+  /** Quita personajes del harem del perfil activo, ya divorciados en Discord (014). No hace nada si no hay perfil activo. */
+  removeCharacters: (characterIds: string[]) => void
   /**
    * Sobrescribe el harem del perfil activo con un nuevo pegado (User Story 1 de 005).
    * Devuelve `NO_ACTIVE_PROFILE` sin llamar al caso de uso si no hay perfil activo.
@@ -216,6 +219,14 @@ const ProfilesProvider = ({ children, repository, serverRepository }: IProfilesP
     syncFromRepositories()
   }
 
+  const removeCharacters: IProfilesContext['removeCharacters'] = (characterIds) => {
+    if (!activeProfile) {
+      return
+    }
+    removeCharactersUseCase(activeRepository, activeProfile.id, characterIds)
+    syncFromRepositories()
+  }
+
   const updateActiveProfileHarem: IProfilesContext['updateActiveProfileHarem'] = (rawText, options) => {
     if (!activeProfile) {
       return { ok: false, reason: 'NO_ACTIVE_PROFILE' }
@@ -244,6 +255,7 @@ const ProfilesProvider = ({ children, repository, serverRepository }: IProfilesP
     moveCharacterToBlock,
     mergeSeriesBlock,
     setSeriesVisibleCount,
+    removeCharacters,
     updateActiveProfileHarem,
   }
 

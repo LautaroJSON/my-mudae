@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { ChevronDown, ChevronUp } from 'lucide-react'
 import SortCommandBar from '../SortCommandBar'
+import { useSortBarOpenState } from '../../context/DivorceSelectionContext'
 import { ToggleButton, Wrapper } from './styles'
 
 /**
@@ -11,9 +12,12 @@ import { ToggleButton, Wrapper } from './styles'
  * (ver research.md §3); el cierre por click-afuera/Escape sigue el
  * mismo patrón ya usado por `SettingsFab` (ver
  * contracts/sort-command-toggle-bar-ui.md).
+ *
+ * El abierto/cerrado se comparte con `DivorceBar` (014), que ocupa el
+ * mismo lugar: abrir esta barra oculta la de divorcio y viceversa.
  */
 const SortCommandToggle = () => {
-  const [isOpen, setIsOpen] = useState(false)
+  const [isOpen, setIsOpen] = useSortBarOpenState()
   const wrapperRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -39,7 +43,7 @@ const SortCommandToggle = () => {
       document.removeEventListener('pointerdown', handlePointerDown)
       document.removeEventListener('keydown', handleKeyDown)
     }
-  }, [isOpen])
+  }, [isOpen, setIsOpen])
 
   return (
     <Wrapper ref={wrapperRef}>
@@ -47,7 +51,7 @@ const SortCommandToggle = () => {
         type="button"
         aria-label={isOpen ? 'Ocultar comando de orden' : 'Mostrar comando de orden'}
         aria-expanded={isOpen}
-        onClick={() => setIsOpen((previous) => !previous)}
+        onClick={() => setIsOpen(!isOpen)}
       >
         {isOpen ? <ChevronDown size={20} aria-hidden="true" /> : <ChevronUp size={20} aria-hidden="true" />}
       </ToggleButton>
